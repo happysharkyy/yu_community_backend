@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <!--<classPathEntry-->
+    <!--location="E:\repo\m2\mysql\mysql-connector-java\5.1.13\mysql-connector-java-5.1.31.jar"/>-->
+
+    <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
+        <!-- 生成UTF-8文件-->
+        <property name="javaFileEncoding" value="UTF-8"/>
+
+        <!-- 增加实体类Serializable实现 -->
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        <!-- tk mapper 插件 -->
+        <plugin type="com.goufn.permission.generator.NovaMapperPlugin">
+            <property name="mappers" value="tk.mybatis.mapper.common.Mapper"/>
+            <!-- caseSensitive默认false，当数据库表名区分大小写时，可以将该属性设置为true -->
+            <property name="caseSensitive" value="true"/>
+            <!-- 启用swagger注解  默认false-->
+            <property name="swaggerApiEnabled" value="true"/>
+        </plugin>
+        <!--connectionURL="jdbc:mysql://localhost:3306/ievent"-->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/permission?useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=false&amp;serverTimezone = GMT"
+                        userId="doubao"
+                        password="123456">
+        </jdbcConnection>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.douyuehan.doubao.model.entity"
+                            targetProject="src/main/java">
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources"/>
+
+        <javaClientGenerator targetPackage="com.douyuehan.doubao.mapper
+"
+                             targetProject="src/main/java" type="XMLMAPPER"/>
+
+        <table tableName="comments_root" domainObjectName="CommentsRoot"/>
+
+    </context>
+</generatorConfiguration>

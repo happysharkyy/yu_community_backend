@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.douyuehan.doubao.mapper.SysStarMapper" >
+  <resultMap id="BaseResultMap" type="com.douyuehan.doubao.model.entity.SysStar" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+    <result column="obj_id" property="objId" jdbcType="VARCHAR" />
+    <result column="user_id" property="userId" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TINYINT"/>
+    <result column="modify_time" property="modifyTime" jdbcType="TINYINT"/>
+    <result column="star_status" property="starStatus" jdbcType="INTEGER" />
+  </resultMap>
+</mapper>
