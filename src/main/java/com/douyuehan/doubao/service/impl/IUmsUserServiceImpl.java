@@ -1,20 +1,25 @@
 package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ColumnFilter;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.common.exception.ApiAsserts;
 import com.douyuehan.doubao.common.security.util.JwtTokenUtil;
 import com.douyuehan.doubao.mapper.BmsFollowMapper;
 import com.douyuehan.doubao.mapper.BmsTopicMapper;
+import com.douyuehan.doubao.mapper.SysRoleMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
 import com.douyuehan.doubao.model.dto.LoginDTO;
 import com.douyuehan.doubao.model.dto.RegisterDTO;
-import com.douyuehan.doubao.model.entity.BmsFollow;
-import com.douyuehan.doubao.model.entity.BmsPost;
-import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.model.entity.*;
 import com.douyuehan.doubao.model.vo.ProfileVO;
 import com.douyuehan.doubao.service.IUmsUserService;
-import com.douyuehan.doubao.utils.MD5Utils;
+import com.douyuehan.doubao.service.SysMenuService;
+import com.douyuehan.doubao.service.SysPermissionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +33,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import java.util.Date;
+import org.springframework.util.StringUtils;
 
+import java.util.*;
 
 
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements IUmsUserService {
-
+public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements IUmsUserService{
+    @Autowired
+    private SysPermissionService sysPermissionService;
+    @Autowired
+    private SysMenuService menuService;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
@@ -45,6 +54,8 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
     private BmsTopicMapper bmsTopicMapper;
     @Autowired
     private BmsFollowMapper bmsFollowMapper;
+    @Autowired
+    private SysRoleMapper sysRoleMapper;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -110,4 +121,75 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
 
         return profile;
     }
+    /**
+     * 获取过滤字段的值
+     * @param filterName
+     * @return
+     */
+    public String getColumnFilterValue(PageRequest pageRequest, String filterName) {
+        String value = null;
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get(filterName);
+        if(columnFilter != null) {
+            value = columnFilter.getValue();
+        }
+        return value;
+    }
+    @Override
+    public PageResult findPage(PageRequest pageRequest) {
+        PageResult pageResult = null;
+        String name = getColumnFilterValue(pageRequest, "userName");
+        String email = getColumnFilterValue(pageRequest, "email");
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        Page<SysUser> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        if(!StringUtils.isEmpty(name)) {
+            queryWrapper.eq(SysUser::getUsername, name);
+            if(!StringUtils.isEmpty(email)) {
+                queryWrapper.eq(SysUser::getEmail, email);
+            }
+        }
+        IPage<SysUser> result = baseMapper.selectPage(page, queryWrapper);;
+        findUserRoles(result);
+        pageResult = new PageResult(result);
+        return pageResult;
+    }
+    private void findUserRoles(IPage page) {
+        List<?> content = page.getRecords();
+        for(Object object:content) {
+            SysUser sysUser = (SysUser) object;
+            if(sysUser.getStatus()==true){
+                sysUser.setStatusDetail("使用中");
+            }else {
+                sysUser.setStatusDetail("未使用");
+            }
+            SysRole userRoles = sysRoleMapper.selectById(sysUser.getRoleId());
+            sysUser.setRoleNames(userRoles.getRemark());
+            sysUser.setUserRoles(userRoles);
+        }
+    }
+
+    public SysUser findByName(String userName) {
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUser::getUsername, userName);
+        return baseMapper.selectOne(wrapper);
+    }
+    @Override
+    public Set<String> findPermissions(String userName) {
+        SysUser user = findByName(userName);
+        if (user != null) {
+            List<SysPermission> list = sysPermissionService.getByRoleId(user.getId());
+            List<String> tempList = new ArrayList<>();
+            for (int i = 0; i < list.size(); i++) {
+                tempList.add(list.get(i).getValue());
+            }
+            Set<String> stringSet;
+            stringSet = new HashSet<>(tempList);
+            System.out.println("--------------"+stringSet.toString());
+            return stringSet;
+        }
+        return new HashSet<>();
+    }
+
+
 }

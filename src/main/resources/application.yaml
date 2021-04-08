@@ -11,7 +11,14 @@ jwt:
   # 私钥
   secret: '2CF24FE663DBB493E56BA4E31BE6FD03'
 
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 secure:
   ignored:
     urls: #安全路径白名单

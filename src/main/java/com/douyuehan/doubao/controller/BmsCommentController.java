@@ -31,6 +31,7 @@ public class BmsCommentController extends BaseController {
         List<CommentVO> lstBmsComment = bmsCommentService.getCommentsByTopicID(topicid);
         return ApiResult.success(lstBmsComment);
     }
+    @PreAuthorize("hasAuthority('comment:add')")
     @PostMapping("/add_comment")
     public ApiResult<BmsComment> add_comment(Principal principal,
                                              @RequestBody CommentDTO dto) {

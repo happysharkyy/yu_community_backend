@@ -78,4 +78,12 @@ public class SysUser implements Serializable {
 
     @TableField(value = "modify_time", fill = FieldFill.INSERT_UPDATE)
     private Date modifyTime;
+    @TableField(exist = false)
+    private String statusDetail;
+
+    @TableField(exist = false)
+    private String roleNames;
+
+    @TableField(exist = false)
+    private SysRole userRoles;
 }

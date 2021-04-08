@@ -15,8 +15,8 @@ public interface SysPermissionService extends IService<SysPermission> {
     /**
      * 根据角色ID查询用户权限
      *
-     * @param roleId
+     * @param userId
      * @return
      */
-    List<SysPermission> getByRoleId(Integer roleId);
+    List<SysPermission> getByRoleId(String userId);
 }

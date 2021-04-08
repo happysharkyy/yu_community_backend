@@ -23,16 +23,11 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
 
     @Autowired
     private SysRolePermissionService sysRolePermissionService;
+    @Autowired
+    private SysPermissionMapper sysPermissionMapper;
 
     @Override
-    public List<SysPermission> getByRoleId(Integer roleId) {
-        List<SysRolePermission> rolePermissions = sysRolePermissionService.selectByRoleId(roleId);
-        List<Integer> permissionIds = rolePermissions.stream()
-                .map(SysRolePermission::getPermissionId)
-                .collect(Collectors
-                        .toList());
-        QueryWrapper<SysPermission> wrapper = new QueryWrapper<>();
-        wrapper.lambda().in(SysPermission::getId, permissionIds);
-        return this.baseMapper.selectList(wrapper);
+    public List<SysPermission> getByRoleId(String userId) {
+        return sysPermissionMapper.selectList(userId);
     }
 }

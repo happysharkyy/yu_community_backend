@@ -24,6 +24,17 @@
         <emoji-java.version>5.1.1</emoji-java.version>
     </properties>
     <dependencies>
+        <!-- 必须的 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>2.1.0.RELEASE</version>
+        </dependency>
+        <!-- Spring Boot使用Micrometer，一个应用metrics组件，将actuator metrics整合到外部监控系统中。-->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -119,8 +130,17 @@
             <version>0.9.0</version>
         </dependency>
 
-
-
+        <!-- Spring Boot使用Micrometer，一个应用metrics组件，将actuator metrics整合到外部监控系统中。-->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!-- 验证码 -->
+        <dependency>
+            <groupId>com.github.penggle</groupId>
+            <artifactId>kaptcha</artifactId>
+            <version>2.3.2</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

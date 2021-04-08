@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 角色
@@ -28,4 +31,17 @@ public class SysRole implements Serializable {
 
     @TableField("remark")
     private String remark;
+
+
+    private int isDel;
+
+    private String createBy;
+
+    private Date createTime;
+
+    private String updateBy;
+
+    private Date updateTime;
+
+
 }

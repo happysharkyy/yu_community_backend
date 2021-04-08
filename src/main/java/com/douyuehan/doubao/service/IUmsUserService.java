@@ -1,10 +1,15 @@
 package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.dto.LoginDTO;
 import com.douyuehan.doubao.model.dto.RegisterDTO;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.ProfileVO;
+
+import java.util.List;
+import java.util.Set;
 
 
 public interface IUmsUserService extends IService<SysUser> {
@@ -37,4 +42,14 @@ public interface IUmsUserService extends IService<SysUser> {
      * @return
      */
     ProfileVO getUserProfile(String id);
+
+
+    PageResult findPage(PageRequest pageRequest);
+    /**
+     * 查找用户的菜单权限标识集合
+     * @param userName
+     * @return
+     */
+    Set<String> findPermissions(String userName);
+//    List<SysUserRole> findUserRoles(Long userId);
 }

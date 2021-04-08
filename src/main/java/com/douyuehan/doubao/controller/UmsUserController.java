@@ -4,12 +4,14 @@ package com.douyuehan.doubao.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.dto.LoginDTO;
 import com.douyuehan.doubao.model.dto.RegisterDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.service.IBmsPostService;
 import com.douyuehan.doubao.service.IUmsUserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.util.Assert;
@@ -61,6 +63,12 @@ public class UmsUserController extends BaseController {
         return ApiResult.success(null, "注销成功");
     }
 
+    @GetMapping("/getByUserName/{username}")
+    public ApiResult getUserByName01(@PathVariable("username") String username) {
+        SysUser user = iUmsUserService.getUserByUsername(username);
+        Assert.notNull(user, "用户不存在");
+        return ApiResult.success(user);
+    }
     @GetMapping("/{username}")
     public ApiResult<Map<String, Object>> getUserByName(@PathVariable("username") String username,
                                                         @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
@@ -79,4 +87,23 @@ public class UmsUserController extends BaseController {
         iUmsUserService.updateById(sysUser);
         return ApiResult.success(sysUser);
     }
+    //    @PreAuthorize("hasAuthority('user:view')")
+//    @RequiresPermissions("sys:user:view")
+//    @GetMapping(value="/findUserRoles")
+//    public ApiResult findUserRoles(@RequestParam Long userId) {
+//        return ApiResult.success(iUmsUserService.findUserRoles(userId));
+//    }
+
+//    @Log("查看用户")
+//    @RequiresPermissions("sys:user:view")
+    @PostMapping(value="/findPage")
+    public ApiResult findPage(@RequestBody PageRequest pageRequest) {
+        System.out.println(iUmsUserService.findPage(pageRequest));
+        return ApiResult.success(iUmsUserService.findPage(pageRequest));
+    }
+    @GetMapping(value="/findPermissions")
+    public ApiResult findPermissions(@RequestParam String name) {
+        return ApiResult.success(iUmsUserService.findPermissions(name));
+    }
+
 }
