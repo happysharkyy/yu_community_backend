@@ -19,7 +19,7 @@ public class BmsBillboardController extends BaseController {
     @Resource
     private IBmsBillboardService bmsBillboardService;
 
-    @PreAuthorize("hasAuthority('billboard:show')")
+//    @PreAuthorize("hasAuthority('billboard:show')")
     @GetMapping("/show")
     public ApiResult<BmsBillboard> getNotices(){
         List<BmsBillboard> list = bmsBillboardService.list(new

@@ -23,7 +23,8 @@ public class SysStarController extends BaseController {
     private SysStarService sysStarService;
     @GetMapping("/get_stars")
     public ApiResult<List<SysStar>> getCommentsByTopicID(@RequestParam(value = "topicid", defaultValue = "1") String topicid, @RequestParam(value = "type", defaultValue = "1") String type) {
-        List<SysStar> lstBmsComment = sysStarService.select(topicid,type);
+        List<SysStar> lstBmsComment =
+                sysStarService.select(topicid,type);
         return ApiResult.success(lstBmsComment);
     }
     @PostMapping("/save_star")

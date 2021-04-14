@@ -1,14 +1,19 @@
 package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ColumnFilter;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.BmsTagMapper;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
 import com.douyuehan.doubao.service.IBmsTagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +32,6 @@ public class IBmsTagServiceImpl extends ServiceImpl<BmsTagMapper, BmsTag> implem
 
     @Autowired
     private com.douyuehan.doubao.service.IBmsPostService IBmsPostService;
-
 
     @Override
     public List<BmsTag> insertTags(List<String> tagNames) {
@@ -55,6 +59,29 @@ public class IBmsTagServiceImpl extends ServiceImpl<BmsTagMapper, BmsTag> implem
         wrapper.in(BmsPost::getId, ids);
 
         return IBmsPostService.page(topicPage, wrapper);
+    }
+    public String getColumnFilterValue(PageRequest pageRequest, String filterName) {
+        String value = null;
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get(filterName);
+        if(columnFilter != null) {
+            value = columnFilter.getValue();
+        }
+        return value;
+    }
+    @Override
+    public PageResult findPage(PageRequest pageRequest) {
+        PageResult pageResult = null;
+        String tagName = getColumnFilterValue(pageRequest, "tagName");
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        Page<BmsTag> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<BmsTag> queryWrapper = new LambdaQueryWrapper<>();
+        if(!StringUtils.isEmpty(tagName)) {
+            queryWrapper.eq(BmsTag::getName, tagName);
+        }
+        IPage<BmsTag> result = this.baseMapper.selectPage(page, queryWrapper);;
+        pageResult = new PageResult(result);
+        return pageResult;
     }
 
 }

@@ -2,8 +2,12 @@ package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ColumnFilter;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.BmsTagMapper;
 import com.douyuehan.doubao.mapper.BmsTopicMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
@@ -24,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -136,5 +141,28 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
                 topic.setTags(tags);
             }
         });
+    }
+    public String getColumnFilterValue(PageRequest pageRequest, String filterName) {
+        String value = null;
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get(filterName);
+        if(columnFilter != null) {
+            value = columnFilter.getValue();
+        }
+        return value;
+    }
+    @Override
+    public PageResult findPage(PageRequest pageRequest) {
+        PageResult pageResult = null;
+        String title = getColumnFilterValue(pageRequest, "title");
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        Page<BmsPost> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<BmsPost> queryWrapper = new LambdaQueryWrapper<>();
+        if(!StringUtils.isEmpty(title)) {
+            queryWrapper.eq(BmsPost::getTitle, title);
+        }
+        IPage<BmsPost> result = this.baseMapper.selectPage(page, queryWrapper);;
+        pageResult = new PageResult(result);
+        return pageResult;
     }
 }

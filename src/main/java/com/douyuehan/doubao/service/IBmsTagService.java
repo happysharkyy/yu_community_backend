@@ -2,6 +2,8 @@ package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
 
@@ -24,4 +26,6 @@ public interface IBmsTagService extends IService<BmsTag> {
      * @return
      */
     Page<BmsPost> selectTopicsByTagId(Page<BmsPost> topicPage, String id);
+
+    PageResult findPage(PageRequest pageRequest);
 }

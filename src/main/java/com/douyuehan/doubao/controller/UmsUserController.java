@@ -9,16 +9,21 @@ import com.douyuehan.doubao.model.dto.LoginDTO;
 import com.douyuehan.doubao.model.dto.RegisterDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
+//import com.douyuehan.doubao.model.vo.SysUserVO;
 import com.douyuehan.doubao.service.IBmsPostService;
 import com.douyuehan.doubao.service.IUmsUserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.util.Assert;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -29,7 +34,8 @@ public class UmsUserController extends BaseController {
     private IUmsUserService iUmsUserService;
     @Resource
     private IBmsPostService iBmsPostService;
-
+    @Resource
+    private PasswordEncoder passwordEncoder;
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ApiResult<Map<String, Object>> register(@Valid @RequestBody RegisterDTO dto) {
         SysUser user = iUmsUserService.executeRegister(dto);
@@ -82,8 +88,15 @@ public class UmsUserController extends BaseController {
         map.put("topics", page);
         return ApiResult.success(map);
     }
-    @PostMapping("/update")
+    @PostMapping(value="/update")
     public ApiResult<SysUser> updateUser(@RequestBody SysUser sysUser) {
+
+//        SysUser sysUser = new SysUser();
+//        BeanUtils.copyProperties(sysUserVO,sysUser);
+//        sysUser.setModifyTime(new Date());
+//        sysUser.setUserRoles(sysUserVO.getUserRoleid());
+//
+        System.out.println(sysUser+"-----------------------------------------------------------");
         iUmsUserService.updateById(sysUser);
         return ApiResult.success(sysUser);
     }
@@ -106,4 +119,44 @@ public class UmsUserController extends BaseController {
         return ApiResult.success(iUmsUserService.findPermissions(name));
     }
 
+    @PostMapping(value="/save")
+    public ApiResult save(@RequestBody SysUser record) {
+        System.out.println(record+"-----------------------01");
+        SysUser user = iUmsUserService.getUserByUsername(record.getUsername());
+        if(user != null) {
+            if("admin".equalsIgnoreCase(user.getUsername())) {
+                return ApiResult.failed("超级管理员不允许修改!");
+            }
+        }
+        if(record.getPassword() != null) {
+            if(user == null) {
+                // 新增用户
+                if(iUmsUserService.getUserByUsername(record.getUsername()) != null) {
+                    return ApiResult.failed("用户名已存在!");
+                }
+                record.setPassword(passwordEncoder.encode(record.getPassword()));
+            } else {
+                // 修改用户, 且修改了密码
+                if(!record.getPassword().equals(user.getPassword())) {
+                    System.out.println("-------------"+passwordEncoder.encode(record.getPassword()));
+                    record.setPassword(passwordEncoder.encode(record.getPassword()));
+                }
+            }
+        }
+        record.setModifyTime(new Date());
+
+        return iUmsUserService.saveUser(record);
+    }
+
+
+    @PostMapping(value="/delete")
+    public ApiResult delete(@RequestBody List<SysUser> records) {
+        for(SysUser record : records) {
+            SysUser sysUser = iUmsUserService.getUserByUsername(record.getUsername());
+            if(sysUser != null && "admin".equalsIgnoreCase(sysUser.getUsername())) {
+                return ApiResult.failed("超级管理员不允许删除!");
+            }
+        }
+        return ApiResult.success("成功");
+    }
 }

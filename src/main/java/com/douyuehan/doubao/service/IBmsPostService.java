@@ -2,6 +2,8 @@ package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
@@ -52,4 +54,6 @@ public interface IBmsPostService extends IService<BmsPost> {
      * @return
      */
     Page<PostVO> searchByKey(String keyword, Page<PostVO> page);
+
+    PageResult findPage(PageRequest pageRequest);
 }

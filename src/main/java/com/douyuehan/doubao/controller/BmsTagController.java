@@ -3,6 +3,7 @@ package com.douyuehan.doubao.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
 import com.douyuehan.doubao.service.IBmsTagService;
@@ -43,6 +44,10 @@ public class BmsTagController extends BaseController {
         map.put("hotTags", hotTags);
 
         return ApiResult.success(map);
+    }
+    @PostMapping(value="/findPage")
+    public ApiResult findPage(@RequestBody PageRequest pageRequest) {
+        return ApiResult.success(bmsTagService.findPage(pageRequest));
     }
 
 }

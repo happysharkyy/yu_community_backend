@@ -1,6 +1,7 @@
 package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.dto.LoginDTO;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 public interface IUmsUserService extends IService<SysUser> {
 
+    int delete(List<SysUser> users);
     /**
      * 注册功能
      *
@@ -51,5 +53,7 @@ public interface IUmsUserService extends IService<SysUser> {
      * @return
      */
     Set<String> findPermissions(String userName);
+
+    ApiResult saveUser(SysUser record);
 //    List<SysUserRole> findUserRoles(Long userId);
 }

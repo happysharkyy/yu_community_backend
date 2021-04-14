@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.ColumnFilter;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
@@ -137,7 +138,7 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
     @Override
     public PageResult findPage(PageRequest pageRequest) {
         PageResult pageResult = null;
-        String name = getColumnFilterValue(pageRequest, "userName");
+        String name = getColumnFilterValue(pageRequest, "name");
         String email = getColumnFilterValue(pageRequest, "email");
         int pageNum = pageRequest.getPageNum();
         int pageSize = pageRequest.getPageSize();
@@ -191,5 +192,39 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
         return new HashSet<>();
     }
 
+    @Override
+    public ApiResult saveUser(SysUser record) {
+
+        if(record.getId().equals("0")){
+            LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(SysUser::getUsername, record.getUsername());
+            SysUser sysUser = baseMapper.selectOne(wrapper);
+            if (!ObjectUtils.isEmpty(sysUser)) {
+                ApiAsserts.fail("账号或邮箱已存在！");
+            }
+            SysUser addUser = SysUser.builder()
+                    .username(record.getUsername())
+                    .alias(record.getUsername())
+                    .password(passwordEncoder.encode(record.getPassword()))
+                    .email(record.getEmail())
+                    .mobile(record.getMobile())
+                    .roleId(record.getRoleId())
+                    .bio(record.getBio())
+                    .createTime(new Date())
+                    .status(true)
+                    .build();
+            return ApiResult.success(baseMapper.insert(addUser));
+        }else{
+            return ApiResult.success(updateById(record));
+        }
+    }
+
+    @Override
+    public int delete(List<SysUser> users) {
+        for (SysUser user : users) {
+            removeById(user.getId());
+        }
+        return 1;
+    }
 
 }

@@ -2,6 +2,7 @@ package com.douyuehan.doubao.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
@@ -77,5 +78,9 @@ public class BmsPostController extends BaseController {
         iBmsPostService.removeById(id);
         return ApiResult.success(null,"删除成功");
     }
-
+    @PostMapping(value="/findPage")
+    public ApiResult findPage(@RequestBody PageRequest pageRequest) {
+        System.out.println(iBmsPostService.findPage(pageRequest));
+        return ApiResult.success(iBmsPostService.findPage(pageRequest));
+    }
 }

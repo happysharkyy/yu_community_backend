@@ -30,7 +30,6 @@ public class SysUser implements Serializable {
     @TableField("alias")
     private String alias;
 
-    @JsonIgnore()
     @TableField("password")
     private String password;
 
