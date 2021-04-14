@@ -62,6 +62,7 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
     private UserDetailsService userDetailsService;
     @Override
     public SysUser executeRegister(RegisterDTO dto) {
+
         //查询是否有相同用户名的用户
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getUsername, dto.getName()).or().eq(SysUser::getEmail, dto.getEmail());

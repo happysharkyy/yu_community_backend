@@ -58,6 +58,11 @@ public class BmsPostController extends BaseController {
         List<BmsPost> topics = iBmsPostService.getRecommend(id);
         return ApiResult.success(topics);
     }
+    @GetMapping("/findById/{id}")
+    public ApiResult<Map<String, Object>> findById(@PathVariable("id") String id) {
+        Map<String, Object> map = iBmsPostService.viewTopic(id);
+        return ApiResult.success(map);
+    }
 
     @PostMapping("/update")
     public ApiResult<BmsPost> update(Principal principal, @Valid @RequestBody BmsPost post) {
@@ -83,4 +88,5 @@ public class BmsPostController extends BaseController {
         System.out.println(iBmsPostService.findPage(pageRequest));
         return ApiResult.success(iBmsPostService.findPage(pageRequest));
     }
+
 }
