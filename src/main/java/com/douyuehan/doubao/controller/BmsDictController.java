@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("dict")
-public class DictController {
+public class BmsDictController {
 
     @Autowired
     private SysDictService dictService;

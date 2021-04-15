@@ -29,7 +29,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/ums/user")
-public class UmsUserController extends BaseController {
+public class SysUserController extends BaseController {
     @Resource
     private IUmsUserService iUmsUserService;
     @Resource

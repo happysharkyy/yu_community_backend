@@ -6,13 +6,18 @@ import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
+import com.douyuehan.doubao.model.entity.BmsTopicTag;
+import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.service.IBmsTagService;
+import com.douyuehan.doubao.service.IBmsTopicTagService;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
+import javax.swing.text.html.HTML;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tag")
@@ -20,6 +25,8 @@ public class BmsTagController extends BaseController {
 
     @Resource
     private IBmsTagService bmsTagService;
+    @Resource
+    private IBmsTopicTagService iBmsTopicTagService;
 
     @GetMapping("/{name}")
     public ApiResult<Map<String, Object>> getTopicsByTag(
@@ -49,5 +56,42 @@ public class BmsTagController extends BaseController {
     public ApiResult findPage(@RequestBody PageRequest pageRequest) {
         return ApiResult.success(bmsTagService.findPage(pageRequest));
     }
+    @PostMapping(value="/save/{topicId}")
+    public ApiResult save(@RequestBody List<String> list,@PathVariable("topicId") String topicId) {
+
+        List<BmsTopicTag> topicTagList = iBmsTopicTagService.selectByTopicId(topicId);
+        List<BmsTag> tagList = new ArrayList<>();//这个文章所有标签
+
+        for (String s:list) {
+            //查标签表是否包含该标签
+            LambdaQueryWrapper<BmsTag> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(BmsTag::getName, s);
+            List<BmsTag> bmsTags = bmsTagService.list(wrapper);
+
+            if(bmsTags.isEmpty()){//不包含该标签
+                List<String> strings = new ArrayList<>();
+                strings.add(s);
+                List<BmsTag> list1 = bmsTagService.insertTags(strings);
+                tagList.add(list1.get(0));
+                System.out.println(tagList.toString()+"-----a"+topicId);
+            }else{//包含该标签判断标签有没有关联这个文章
+                for (BmsTag bmsTag : bmsTags) {
+                    List<BmsTopicTag> topicTagList1 = topicTagList.stream().filter(p -> p.getTagId().equals(bmsTag.getId())).collect(Collectors.toList());
+                    if(topicTagList1.isEmpty()){//没有关联
+                        List<String> strings = new ArrayList<>();
+                        strings.add(s);
+                        List<BmsTag> list1 = bmsTagService.insertTags(strings);
+                        tagList.add(bmsTag);
+                        System.out.println(tagList.toString()+"-----a"+topicId);
+                    }else{
+                        tagList.add(bmsTag);
+                    }
+                }
+            }
+        }
+        iBmsTopicTagService.createTopicTag(topicId, tagList);
+        return ApiResult.success();
+    }
+
 
 }

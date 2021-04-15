@@ -73,7 +73,11 @@ public class BmsPostController extends BaseController {
         iBmsPostService.updateById(post);
         return ApiResult.success(post);
     }
-
+    @PostMapping("/save")
+    public ApiResult<BmsPost> update(@RequestBody BmsPost post) {
+        iBmsPostService.updateById(post);
+        return ApiResult.success(post);
+    }
     @DeleteMapping("/delete/{id}")
     public ApiResult<String> delete(Principal principal, @PathVariable("id") String id) {
         SysUser sysUser = umsUserService.getUserByUsername(principal.getName());
