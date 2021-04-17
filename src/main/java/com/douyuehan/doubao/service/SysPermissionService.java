@@ -1,6 +1,7 @@
 package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.douyuehan.doubao.model.dto.SysRolePermissionDto;
 import com.douyuehan.doubao.model.entity.SysPermission;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface SysPermissionService extends IService<SysPermission> {
      * @return
      */
     List<SysPermission> getByRoleId(String userId);
+
+
 }

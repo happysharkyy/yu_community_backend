@@ -46,4 +46,6 @@ public class BmsBillboard implements Serializable {
     @TableField("`show`")
     private boolean show = false;
 
+    @TableField(exist = false)
+    private String statusDetail;
 }

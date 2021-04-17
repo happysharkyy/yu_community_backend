@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 权限
@@ -34,4 +35,13 @@ public class SysPermission implements Serializable {
      */
     @TableField("pid")
     private Integer pid;
+
+    @TableField(exist = false)
+    private String parentName;
+    @TableField(exist = false)
+    private Integer level;
+    @TableField(exist = false)
+    private Integer isCal;
+    @TableField(exist = false)
+    private List<SysPermission> children;
 }

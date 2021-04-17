@@ -3,25 +3,36 @@ package com.douyuehan.doubao.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.mapper.SysPermissionMapper;
 import com.douyuehan.doubao.mapper.SysRoleMapper;
-import com.douyuehan.doubao.model.entity.SysRole;
-import com.douyuehan.doubao.model.entity.SysRoleMenu;
-import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.mapper.SysRolePermissionMapper;
+import com.douyuehan.doubao.model.entity.*;
+import com.douyuehan.doubao.service.SysPermissionService;
+import com.douyuehan.doubao.service.SysRolePermissionService;
 import com.douyuehan.doubao.service.SysRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("role")
 public class SysRoleController {
     @Autowired
+    private SysRolePermissionService sysRolePermissionService;
+    @Autowired
+    private SysRolePermissionMapper sysRolePermissionMapper;
+    @Autowired
     private SysRoleService roleService;
     @Autowired
     private SysRoleMapper roleMapper;
+
+    @Autowired
+    private SysPermissionMapper sysPermissionMapper;
 
     @PostMapping(value="/save")
     public ApiResult save(@RequestBody SysRole record, Principal principal) {
@@ -73,7 +84,18 @@ public class SysRoleController {
     public ApiResult findRoleMenus(@RequestParam int roleId) {
         return ApiResult.success(roleService.findRoleMenus(roleId));
     }
+    @GetMapping(value="/findPermissionByRoleId/{roleId}")
+    public ApiResult findPermissionByRoleId(@PathVariable("roleId") int roleId) {
 
+        List<SysPermission> list = sysPermissionMapper.selectListByRoleId(roleId);
+        List<Integer> ids = list.stream().map(SysPermission::getId).collect(Collectors.toList());
+        if(ids.isEmpty()){
+            return ApiResult.success(new ArrayList<>());
+        }else{
+            return ApiResult.success(sysPermissionMapper.selectBatchIds(ids));
+        }
+
+    }
 
     @PostMapping(value="/saveRoleMenus")
     public ApiResult saveRoleMenus(@RequestBody List<SysRoleMenu> records) {
@@ -86,5 +108,24 @@ public class SysRoleController {
         }
         roleService.saveRoleMenus(records);
         return ApiResult.success();
+    }
+
+    @PostMapping(value="/saveRolePermission")
+    public ApiResult saveRolePermission(@RequestBody List<SysRolePermission> records) {
+        for(SysRolePermission record:records) {
+            SysRole sysRole = roleMapper.selectById(record.getRoleId());
+            if("admin".equalsIgnoreCase(sysRole.getName())) {
+                // 如果是超级管理员，不允许修改
+                return ApiResult.failed("超级管理员拥有所有菜单权限，不允许修改！");
+            }
+        }
+        sysRolePermissionMapper.delete(new LambdaQueryWrapper<SysRolePermission>().eq(SysRolePermission::getRoleId, records.get(0).getRoleId()));
+        sysRolePermissionService.saveBatch(records);
+        return ApiResult.success();
+    }
+
+    @PostMapping("/queryAccessByRole")
+    public ApiResult queryMenuByRole() {
+        return ApiResult.success(sysRolePermissionService.queryAccessByRole());
     }
 }

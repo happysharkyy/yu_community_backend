@@ -11,4 +11,15 @@
           AND u.role_id = rp.role_id
           AND rp.permission_id = p.id
     </select>
+    <select id="select" resultType="com.douyuehan.doubao.model.entity.SysPermission">
+        SELECT p.*
+        FROM sys_permission p
+    </select>
+    <select id="selectListByRoleId" resultType="com.douyuehan.doubao.model.entity.SysPermission">
+        SELECT p.*
+        FROM sys_role_permission rp,
+             sys_permission p
+        WHERE  rp.role_id = #{roleId}
+          AND rp.permission_id = p.id
+    </select>
 </mapper>

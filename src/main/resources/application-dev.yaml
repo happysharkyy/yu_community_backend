@@ -16,3 +16,5 @@ logging:
   level:
     root: info
     com.douyuehan.doubao: debug
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml

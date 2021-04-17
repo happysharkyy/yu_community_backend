@@ -1,5 +1,6 @@
 package com.douyuehan.doubao.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.douyuehan.doubao.model.entity.SysPermission;
 import org.apache.ibatis.annotations.Mapper;
@@ -26,4 +27,7 @@ public interface SysPermissionMapper extends BaseMapper<SysPermission> {
      */
     List<SysPermission> selectList(@Param("userId") String userId);
 
+    List<SysPermission> select();
+
+    List<SysPermission> selectListByRoleId(@Param("roleId")Integer roleId);
 }
