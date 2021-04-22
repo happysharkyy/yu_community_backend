@@ -12,10 +12,10 @@ import java.util.Date;
 
 @Data
 @Builder
-@TableName("comments_reply")
+@TableName("bms_comments_reply")
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommentsReply implements Serializable {
+public class BmsCommentsReply implements Serializable {
 
     private String id;
 

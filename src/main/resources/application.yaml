@@ -1,6 +1,9 @@
 spring:
   profiles:
     active: dev
+  servlet:
+    multipart:
+      enabled: true
 jwt:
   # Bearer Token
   tokenHead: 'Bearer '
@@ -19,6 +22,7 @@ management:
   endpoint:
     health:
       show-details: always
+
 secure:
   ignored:
     urls: #安全路径白名单
@@ -26,7 +30,7 @@ secure:
       - /swagger-resources/**
       - /swagger/**
       - /**/v2/api-docs
-      - /**/*.js
+      - /websocket/**
       - /**/*.css
       - /**/*.png
       - /**/*.ico

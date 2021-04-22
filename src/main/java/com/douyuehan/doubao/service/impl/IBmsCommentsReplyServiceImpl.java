@@ -2,14 +2,12 @@ package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.douyuehan.doubao.mapper.CommentsReplyMapper;
+import com.douyuehan.doubao.mapper.BmsCommentsReplyMapper;
 import com.douyuehan.doubao.model.dto.CommentsReplyDTO;
-import com.douyuehan.doubao.model.entity.BmsComment;
-import com.douyuehan.doubao.model.entity.CommentsReply;
+import com.douyuehan.doubao.model.entity.BmsCommentsReply;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.CommentReplyVO;
-import com.douyuehan.doubao.model.vo.CommentVO;
-import com.douyuehan.doubao.service.CommentsReplyService;
+import com.douyuehan.doubao.service.IBmsCommentsReplyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,31 +17,31 @@ import java.util.Date;
 import java.util.List;
 @Slf4j
 @Service
-public class CommentsReplyServiceImpl  extends ServiceImpl<CommentsReplyMapper, CommentsReply> implements CommentsReplyService {
+public class IBmsCommentsReplyServiceImpl extends ServiceImpl<BmsCommentsReplyMapper, BmsCommentsReply> implements IBmsCommentsReplyService {
     @Autowired
-    CommentsReplyMapper commentsReplyMapper;
+    BmsCommentsReplyMapper bmsCommentsReplyMapper;
     @Override
-    public int delete(List<CommentsReply> commentsReplyList) {
-        for (CommentsReply commentsReply : commentsReplyList) {
-            commentsReplyMapper.deleteById(commentsReply.getId());
+    public int delete(List<BmsCommentsReply> bmsCommentsReplyList) {
+        for (BmsCommentsReply bmsCommentsReply : bmsCommentsReplyList) {
+            bmsCommentsReplyMapper.deleteById(bmsCommentsReply.getId());
         }
         return 1;
     }
 
     @Override
-    public void saveCommentsReply(CommentsReply commentsReply) {
-        if(commentsReply.getId()==null){
-            commentsReplyMapper.insert(commentsReply);
+    public void saveCommentsReply(BmsCommentsReply bmsCommentsReply) {
+        if(bmsCommentsReply.getId()==null){
+            bmsCommentsReplyMapper.insert(bmsCommentsReply);
         }else {
-            commentsReplyMapper.updateById(commentsReply);
+            bmsCommentsReplyMapper.updateById(bmsCommentsReply);
         }
     }
 
     @Override
-    public List<CommentsReply> list() {
-        LambdaQueryWrapper<CommentsReply> wrapper = new LambdaQueryWrapper<>();
-        List<CommentsReply> commentsReplyList = commentsReplyMapper.selectList(wrapper);
-        return commentsReplyList;
+    public List<BmsCommentsReply> list() {
+        LambdaQueryWrapper<BmsCommentsReply> wrapper = new LambdaQueryWrapper<>();
+        List<BmsCommentsReply> bmsCommentsReplyList = bmsCommentsReplyMapper.selectList(wrapper);
+        return bmsCommentsReplyList;
     }
 
     @Override
@@ -58,8 +56,8 @@ public class CommentsReplyServiceImpl  extends ServiceImpl<CommentsReplyMapper, 
     }
 
     @Override
-    public CommentsReply create(CommentsReplyDTO dto, SysUser principal,SysUser Toprincipal) {
-        CommentsReply comment = CommentsReply.builder()
+    public BmsCommentsReply create(CommentsReplyDTO dto, SysUser principal, SysUser Toprincipal) {
+        BmsCommentsReply comment = BmsCommentsReply.builder()
                 .commentId(dto.getComment_id())
                 .fromId(principal.getId())
                 .fromName(principal.getUsername())

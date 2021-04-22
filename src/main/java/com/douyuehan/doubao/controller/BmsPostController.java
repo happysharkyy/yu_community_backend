@@ -35,7 +35,7 @@ public class BmsPostController extends BaseController {
     @GetMapping("/list")
     public ApiResult<Page<PostVO>> list(@RequestParam(value = "tab", defaultValue = "latest") String tab,
                                         @RequestParam(value = "pageNo", defaultValue = "1")  Integer pageNo,
-                                        @RequestParam(value = "size", defaultValue = "10") Integer pageSize) {
+                                        @RequestParam(value = "size", defaultValue = "+") Integer pageSize) {
         Page<PostVO> list = iBmsPostService.getList(new Page<>(pageNo, pageSize), tab);
         return ApiResult.success(list);
     }

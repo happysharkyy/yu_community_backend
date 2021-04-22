@@ -2,14 +2,10 @@ package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.douyuehan.doubao.mapper.CommentsReplyMapper;
 import com.douyuehan.doubao.mapper.SysStarMapper;
 import com.douyuehan.doubao.model.dto.SysStarDTO;
-import com.douyuehan.doubao.model.entity.CommentsReply;
 import com.douyuehan.doubao.model.entity.SysStar;
-import com.douyuehan.doubao.service.CommentsReplyService;
 import com.douyuehan.doubao.service.SysStarService;
-import com.douyuehan.doubao.utils.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
