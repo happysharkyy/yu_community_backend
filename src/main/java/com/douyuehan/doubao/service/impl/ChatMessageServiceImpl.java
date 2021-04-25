@@ -41,7 +41,10 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
             SysUser sysUser1 = sysUserMapper.selectById(s.getToId());
             s.setToUser(sysUser1);
             s.setCal(this.findLetterUnreadCount(userId,s.getConversationId()));
-            result.add(s);
+            if(s.getCal()!=0){//未读数量为0  不add进去
+                result.add(s);
+            }
+
         }
         iPage.setRecords(result);
         return iPage;
@@ -115,6 +118,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     public int findUnreadCountAll(String userId) {
         LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ChatMessage::getToId,userId);
+        queryWrapper.eq(ChatMessage::getStatus,0);
         chatMessageMapper.selectList(queryWrapper);
         return  chatMessageMapper.selectList(queryWrapper).size();
     }

@@ -3,7 +3,6 @@ server:
 
 web:
   domain: http://localhost
-
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,7 +10,55 @@ spring:
     password: 123456
     url: jdbc:mysql://localhost:3306/doubao?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=GMT%2B8
     type: com.zaxxer.hikari.HikariDataSource
+    druid:
+      filters: stat
+      max-active: 1000
+      initial-size: 100
+      max-wait: 60000
+      min-idle: 500
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 30000
+      validation-query: select 'x'
+      test-while-idle: true
+      test-on-return: false
+      test-on-borrow: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        # 消费者数量
+        concurrency: 10
+        max-concurrency: 10
+        # 消费者每次取的数量
+        prefetch: 1
+        auto-startup: true
+        # 消费失败后重试
+        default-requeue-rejected: true
+        retry:
+          # 启动重试
+          enabled: true
+          # 1s重试一次
+          initial-interval: 1000s
+          # 最大重试三次
+          max-attempts: 3
+          # 最大间隔10s
+          max-interval: 10000s
+          # 上一次等待时间 * multiplier = 下一次重试的时间. (0 < 下次重试时间 <= max-interval)
+          multiplier: 1.0
 
+redis:
+  host: localhost
+  password:
+  database: 0
+  timeout: 1000
+  port: 6379
+  poolMaxTotal: 5000
+  poolMaxIdle: 5000
+  poolMaxWait: 5000
 logging:
   level:
     root: info

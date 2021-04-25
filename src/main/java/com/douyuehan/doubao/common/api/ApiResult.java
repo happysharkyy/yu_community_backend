@@ -92,6 +92,9 @@ public class ApiResult<T> implements Serializable {
     public static <T> ApiResult<T> failed(String message) {
         return new ApiResult<T>(ApiErrorCode.FAILED.getCode(), message, null);
     }
+    public static <T> ApiResult<T> failed(CodeMsg codeMsg) {
+        return new ApiResult<T>(ApiErrorCode.FAILED.getCode(), codeMsg.getMsg(), null);
+    }
 
     /**
      * 失败

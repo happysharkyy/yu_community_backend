@@ -20,6 +20,10 @@ public class ChatListController {
     public ApiResult getList(@RequestParam String userId) {
         return ApiResult.success(chatListService.getList(userId));
     }
+    @PostMapping(value="/insertChat")
+    public ApiResult insertChat(@RequestParam String userId,@RequestParam String signId) {
+        return ApiResult.success(chatListService.insertChat(userId,signId));
+    }
     @PostMapping(value="/remove")
     public ApiResult remove(@RequestParam Integer id) {
         return ApiResult.success(chatListService.Remove(id));

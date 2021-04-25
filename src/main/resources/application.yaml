@@ -36,7 +36,7 @@ secure:
       - /**/*.ico
       - /webjars/springfox-swagger-ui/**
       - /actuator/**
-      - /druid/**
+      - /activity/**
       - /ums/user/register
       - /ums/user/login
       - /ums/user/info

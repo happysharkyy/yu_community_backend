@@ -44,4 +44,19 @@ public class ChatListServiceImpl extends ServiceImpl<ChatListMapper, ChatList> i
         chatListMapper.updateById(chatList);
         return 1;
     }
+
+    @Override
+    public int insertChat(String userId, String signId) {
+        ChatList chatList = new ChatList();
+        chatList.setToId(signId);
+        chatList.setUserId(userId);
+        chatList.setListStatus(0);
+        if(userId.compareTo(signId)>0){
+            chatList.setConversationId(userId+"_"+signId);
+        }else{
+            chatList.setConversationId(signId+"_"+userId);
+        }
+        chatListMapper.insert(chatList);
+        return 0;
+    }
 }

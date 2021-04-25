@@ -122,8 +122,26 @@ public class ApplicationWebSocket {
                     fromSession.getAsyncRemote().sendText(new Gson().toJson(m));
                     toSession.getAsyncRemote().sendText(new Gson().toJson(m));
                 } else {
+                    SysUser sysUser = iUmsUserService.getUserByUsername(socketMsg.getFromUser());
+                    SysUser sysUser1 = iUmsUserService.getUserByUsername(socketMsg.getToUser());
+                    ChatMessage chatMessage = new ChatMessage();
+                    chatMessage.setFromId(sysUser.getId());
+                    chatMessage.setToId(sysUser1.getId());
+                    chatMessage.setContent(EmojiParser.parseToAliases(socketMsg.getMsg()));
+                    chatMessage.setCreateTime(new Date());
+                    chatMessage.setStatus(0);
+                    if(sysUser.getId().compareTo(sysUser1.getId())>0){
+                        chatMessage.setConversationId(sysUser.getId()+"_"+sysUser1.getId());//大的放前面小的放后面
+                    }else{
+                        chatMessage.setConversationId(sysUser1.getId()+"_"+sysUser.getId());//大的放前面小的放后面
+                    }
+
+                    chatMessageService.addSysMessage(chatMessage);
+                    Map<String,Object> m=new HashMap<String, Object>();
+                    m.put("type",3);
+                    m.put("text","系统消息：对方不在线!");
                     //发送给发送者.
-                    fromSession.getAsyncRemote().sendText("系统消息：对方不在线或者您输入的频道号不对");
+                    fromSession.getAsyncRemote().sendText(new Gson().toJson(m));
                 }
             } else {
                 //群发消息

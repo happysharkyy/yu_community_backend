@@ -7,4 +7,5 @@ import java.util.List;
 public interface ChatListService {
     List<ChatList> getList(String userId);
     int Remove(int id);
+    int insertChat(String userId, String signId);
 }
