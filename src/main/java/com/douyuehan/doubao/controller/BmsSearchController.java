@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/search")
@@ -19,10 +20,10 @@ public class BmsSearchController extends BaseController {
     private IBmsPostService postService;
 
     @GetMapping
-    public ApiResult<Page<PostVO>> searchList(@RequestParam("keyword") String keyword,
+    public ApiResult<Page<PostVO>> searchList(Principal principal, @RequestParam("keyword") String keyword,
                                               @RequestParam("pageNum") Integer pageNum,
                                               @RequestParam("pageSize") Integer pageSize) {
-        Page<PostVO> results = postService.searchByKey(keyword, new Page<>(pageNum, pageSize));
+        Page<PostVO> results = postService.searchByKey(principal,keyword, new Page<>(pageNum, pageSize));
         return ApiResult.success(results);
     }
 

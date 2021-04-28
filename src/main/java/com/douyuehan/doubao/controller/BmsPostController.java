@@ -48,8 +48,8 @@ public class BmsPostController extends BaseController {
         return ApiResult.success(topic);
     }
     @GetMapping()
-    public ApiResult<Map<String, Object>> view(@RequestParam("id") String id) {
-        Map<String, Object> map = iBmsPostService.viewTopic(id);
+    public ApiResult<Map<String, Object>> view(Principal principal,@RequestParam("id") String id) {
+        Map<String, Object> map = iBmsPostService.viewTopic(principal,id);
         return ApiResult.success(map);
     }
 
@@ -59,8 +59,8 @@ public class BmsPostController extends BaseController {
         return ApiResult.success(topics);
     }
     @GetMapping("/findById/{id}")
-    public ApiResult<Map<String, Object>> findById(@PathVariable("id") String id) {
-        Map<String, Object> map = iBmsPostService.viewTopic(id);
+    public ApiResult<Map<String, Object>> findById(Principal principal,@PathVariable("id") String id) {
+        Map<String, Object> map = iBmsPostService.viewTopic(principal,id);
         return ApiResult.success(map);
     }
 

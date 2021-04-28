@@ -1,5 +1,6 @@
 package com.douyuehan.doubao.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,15 +13,10 @@ import com.douyuehan.doubao.mapper.BmsTagMapper;
 import com.douyuehan.doubao.mapper.BmsTopicMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
-import com.douyuehan.doubao.model.entity.BmsPost;
-import com.douyuehan.doubao.model.entity.BmsTag;
-import com.douyuehan.doubao.model.entity.BmsTopicTag;
-import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.model.entity.*;
 import com.douyuehan.doubao.model.vo.PostVO;
 import com.douyuehan.doubao.model.vo.ProfileVO;
-import com.douyuehan.doubao.service.IBmsPostService;
-import com.douyuehan.doubao.service.IBmsTagService;
-import com.douyuehan.doubao.service.IUmsUserService;
+import com.douyuehan.doubao.service.*;
 import com.vdurmont.emoji.EmojiParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -31,6 +27,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +47,11 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     private IUmsUserService iUmsUserService;
 
     @Autowired
+    private IBehaviorService iBehaviorService;
+
+    @Autowired
+    private IBehaviorUserLogService iBehaviorUserLogService;
+    @Autowired
     private com.douyuehan.doubao.service.IBmsTopicTagService IBmsTopicTagService;
     @Override
     public Page<PostVO> getList(Page<PostVO> page, String tab) {
@@ -65,7 +67,6 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     public BmsPost create(CreateTopicDTO dto, SysUser user) {
         BmsPost topic1 = this.baseMapper.selectOne(new LambdaQueryWrapper<BmsPost>().eq(BmsPost::getTitle, dto.getTitle()));
         Assert.isNull(topic1, "话题已存在，请修改");
-
         // 封装
         BmsPost topic = BmsPost.builder()
                 .userId(user.getId())
@@ -74,7 +75,9 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
                 .createTime(new Date())
                 .build();
         this.baseMapper.insert(topic);
-
+        //用户创建动作 设置权重
+        Behavior behavior = new Behavior(user.getId(),topic.getId(),new Date(),iBehaviorUserLogService.getWeightByType("post"), (long) 1);
+        iBehaviorService.insert(behavior);
         // 用户积分增加
         int newScore = user.getScore() + 1;
         umsUserMapper.updateById(user.setScore(newScore));
@@ -91,7 +94,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     }
 
     @Override
-    public Map<String, Object> viewTopic(String id) {
+    public Map<String, Object> viewTopic(Principal principal,String id) {
         Map<String, Object> map = new HashMap<>(16);
         BmsPost topic = this.baseMapper.selectById(id);
         Assert.notNull(topic, "当前话题不存在,或已被作者删除");
@@ -116,6 +119,19 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         ProfileVO user = iUmsUserService.getUserProfile(topic.getUserId());
         map.put("user", user);
 
+        //用户查看帖子 更新权重
+        String nowId = iUmsUserService.getUserByUsername(principal.getName()).getId();
+        if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(nowId,topic.getId()))){
+            Behavior behavior = new Behavior(nowId,topic.getId(),new Date(),
+                    iBehaviorUserLogService.getWeightByType("view")+iBehaviorService.getByBehaviorType(nowId,topic.getId())
+                            .getBehaviorType (),iBehaviorService.getByBehaviorType(nowId,topic.getId())
+                    .getCount()+1);
+            LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Behavior::getUserId,nowId);
+            queryWrapper.eq(Behavior::getPostId,topic.getId());
+            iBehaviorService.update(behavior,queryWrapper);
+        }
+
         return map;
     }
 
@@ -124,21 +140,60 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         return this.baseMapper.selectRecommend(id);
     }
     @Override
-    public Page<PostVO> searchByKey(String keyword, Page<PostVO> page) {
+    public Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page) {
         // 查询话题
         Page<PostVO> iPage = this.baseMapper.searchByKey(page, keyword);
         // 查询话题的标签
         setTopicTags(iPage);
+        List<PostVO> list = iPage.getRecords();int i=0;
+        String nowId = iUmsUserService.getUserByUsername(principal.getName()).getId();
+        for (PostVO postVO:
+        list) {
+            i++;
+
+            if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(nowId,postVO.getId()))) {
+                if(i<=5){//分段
+                    Behavior behavior = new Behavior(nowId,postVO.getId(),new Date(),
+                            iBehaviorUserLogService.getWeightByType("search")+iBehaviorService.getByBehaviorType(nowId,postVO.getId())
+                                    .getBehaviorType (),iBehaviorService.getByBehaviorType(nowId,postVO.getId()).getCount()+1);
+                    LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(Behavior::getUserId,nowId);
+                    queryWrapper.eq(Behavior::getPostId,postVO.getId());
+                    iBehaviorService.update(behavior,queryWrapper);
+                }else if(5<i&&i<=10){
+                    Behavior behavior = new Behavior(nowId,postVO.getId(),new Date(),
+                            iBehaviorUserLogService.getWeightByType("search")-0.2+iBehaviorService.getByBehaviorType(nowId,postVO.getId())
+                                    .getBehaviorType (),iBehaviorService.getByBehaviorType(nowId,postVO.getId()).getCount()+1);
+                    LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(Behavior::getUserId,nowId);
+                    queryWrapper.eq(Behavior::getPostId,postVO.getId());
+                    iBehaviorService.update(behavior,queryWrapper);
+                }else if(i>10){
+                    Behavior behavior = new Behavior(nowId,postVO.getId(),new Date(),
+                            iBehaviorUserLogService.getWeightByType("search")-0.4+iBehaviorService.getByBehaviorType(nowId,postVO.getId())
+                                    .getBehaviorType (),iBehaviorService.getByBehaviorType(nowId,postVO.getId()).getCount()+1);
+                    LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(Behavior::getUserId,nowId);
+                    queryWrapper.eq(Behavior::getPostId,postVO.getId());
+                    iBehaviorService.update(behavior,queryWrapper);
+                }
+
+            }
+        }
+
         return iPage;
     }
 
     private void setTopicTags(Page<PostVO> iPage) {
         iPage.getRecords().forEach(topic -> {
             List<BmsTopicTag> topicTags = IBmsTopicTagService.selectByTopicId(topic.getId());
+
             if (!topicTags.isEmpty()) {
                 List<String> tagIds = topicTags.stream().map(BmsTopicTag::getTagId).collect(Collectors.toList());
                 List<BmsTag> tags = bmsTagMapper.selectBatchIds(tagIds);
                 topic.setTags(tags);
+
+
             }
         });
     }

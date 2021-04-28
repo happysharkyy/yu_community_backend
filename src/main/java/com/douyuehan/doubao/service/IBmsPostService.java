@@ -9,6 +9,7 @@ import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.PostVO;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public interface IBmsPostService extends IService<BmsPost> {
      * @param id
      * @return
      */
-    Map<String, Object> viewTopic(String id);
+    Map<String, Object> viewTopic(Principal principal,String id);
     /**
      * 获取随机推荐10篇
      *
@@ -53,7 +54,8 @@ public interface IBmsPostService extends IService<BmsPost> {
      * @param page
      * @return
      */
-    Page<PostVO> searchByKey(String keyword, Page<PostVO> page);
+    Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page);
 
     PageResult findPage(PageRequest pageRequest);
+
 }

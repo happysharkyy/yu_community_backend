@@ -18,6 +18,7 @@ import com.douyuehan.doubao.model.dto.LoginDTO;
 import com.douyuehan.doubao.model.dto.RegisterDTO;
 import com.douyuehan.doubao.model.entity.*;
 import com.douyuehan.doubao.model.vo.ProfileVO;
+import com.douyuehan.doubao.service.IBehaviorService;
 import com.douyuehan.doubao.service.IUmsUserService;
 import com.douyuehan.doubao.service.SysMenuService;
 import com.douyuehan.doubao.service.SysPermissionService;
@@ -57,6 +58,8 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
     private BmsFollowMapper bmsFollowMapper;
     @Autowired
     private SysRoleMapper sysRoleMapper;
+    @Autowired
+    IBehaviorService iBehaviorService;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -79,6 +82,7 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
                 .status(true)
                 .build();
         baseMapper.insert(addUser);
+        iBehaviorService.insertNewUser(addUser);
 
         return addUser;
     }

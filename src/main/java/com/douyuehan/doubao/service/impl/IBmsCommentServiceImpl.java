@@ -1,5 +1,6 @@
 package com.douyuehan.doubao.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,12 +10,16 @@ import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.BmsCommentMapper;
 import com.douyuehan.doubao.model.dto.CommentDTO;
+import com.douyuehan.doubao.model.entity.Behavior;
 import com.douyuehan.doubao.model.entity.BmsComment;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.CommentVO;
+import com.douyuehan.doubao.service.IBehaviorService;
+import com.douyuehan.doubao.service.IBehaviorUserLogService;
 import com.douyuehan.doubao.service.IBmsCommentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,6 +31,10 @@ import java.util.List;
 @Slf4j
 @Service
 public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsComment> implements IBmsCommentService {
+    @Autowired
+    IBehaviorService iBehaviorService;
+    @Autowired
+    IBehaviorUserLogService iBehaviorUserLogService;
     @Override
     public List<CommentVO> getCommentsByTopicID(String topicid) {
         List<CommentVO> lstBmsComment = new ArrayList<CommentVO>();
@@ -46,6 +55,16 @@ public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsCom
                 .topicId(dto.getTopic_id())
                 .createTime(new Date())
                 .build();
+        //用户查看帖子 更新权重
+        if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id()))) {
+            Behavior behavior = new Behavior(user.getId(), dto.getTopic_id(), new Date(),
+                    iBehaviorUserLogService.getWeightByType("comment") + iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id())
+                            .getBehaviorType(),iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id()).getCount()+1);
+            LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Behavior::getUserId, user.getId());
+            queryWrapper.eq(Behavior::getPostId, dto.getTopic_id());
+            iBehaviorService.update(behavior, queryWrapper);
+        }
         this.baseMapper.insert(comment);
         return comment;
     }

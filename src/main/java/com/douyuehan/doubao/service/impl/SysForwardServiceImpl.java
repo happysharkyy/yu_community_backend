@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.douyuehan.doubao.mapper.SysForwardMapper;
 import com.douyuehan.doubao.model.dto.SysForwardDTO;
+import com.douyuehan.doubao.model.entity.Behavior;
 import com.douyuehan.doubao.model.entity.SysForward;
+import com.douyuehan.doubao.service.IBehaviorService;
+import com.douyuehan.doubao.service.IBehaviorUserLogService;
 import com.douyuehan.doubao.service.SysForwardService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -17,6 +20,10 @@ import java.util.List;
 @Slf4j
 @Service
 public class SysForwardServiceImpl extends ServiceImpl<SysForwardMapper, SysForward> implements SysForwardService {
+    @Autowired
+    IBehaviorService iBehaviorService;
+    @Autowired
+    IBehaviorUserLogService iBehaviorUserLogService;
     @Autowired
     SysForwardMapper sysForwardMapper;
     @Override
@@ -36,7 +43,15 @@ public class SysForwardServiceImpl extends ServiceImpl<SysForwardMapper, SysForw
         sysForward.setModifyTime(new Date());
         sysForward.setCreateTime(new Date());
         sysForward.setId(0);
-
+        //用户转发帖子 更新权重
+        Behavior behavior = new Behavior(dto.getUserId(),dto.getObjId(),new Date(),
+                iBehaviorUserLogService.getWeightByType("forward")+iBehaviorService.getByBehaviorType(dto.getUserId(),dto.getObjId())
+                        .getBehaviorType (),iBehaviorService.getByBehaviorType(dto.getUserId(),dto.getObjId())
+                .getCount()+1);
+        LambdaQueryWrapper<Behavior> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Behavior::getUserId,dto.getUserId());
+        queryWrapper.eq(Behavior::getPostId,dto.getObjId());
+        iBehaviorService.update(behavior,queryWrapper);
         return sysForwardMapper.insert(sysForward);
     }
 }
