@@ -70,4 +70,6 @@ public interface IBmsPostService extends IService<BmsPost> {
     RankDTO getRank();
 
     List<RankViewDTO> getViewRank();
+
+    List<BmsPost> getListFllow(Page<PostVO>  page,Principal principal);
 }

@@ -5,10 +5,12 @@ import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
+import com.douyuehan.doubao.model.entity.SysSensitive;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.PostVO;
 import com.douyuehan.doubao.service.IBmsPostService;
 import com.douyuehan.doubao.service.IUmsUserService;
+import com.douyuehan.doubao.utils.SysSensitiveFilterUtil;
 import com.vdurmont.emoji.EmojiParser;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +41,12 @@ public class BmsPostController extends BaseController {
         Page<PostVO> list = iBmsPostService.getList(new Page<>(pageNo, pageSize), tab);
         return ApiResult.success(list);
     }
-
+    @GetMapping("/list/follow")
+    public ApiResult<List<BmsPost>> follow(Principal principal,@RequestParam(value = "pageNo", defaultValue = "1")  Integer pageNo,
+                                        @RequestParam(value = "size", defaultValue = "+1") Integer pageSize) {
+        List<BmsPost> list= iBmsPostService.getListFllow(new Page<>(pageNo, pageSize), principal);;
+        return ApiResult.success(list);
+    }
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ApiResult<BmsPost> create(Principal principal
             , @RequestBody CreateTopicDTO dto) {
@@ -58,6 +65,7 @@ public class BmsPostController extends BaseController {
         List<BmsPost> topics = iBmsPostService.getRecommend(id);
         return ApiResult.success(topics);
     }
+
     @GetMapping("/findById/{id}")
     public ApiResult<Map<String, Object>> findById(Principal principal,@PathVariable("id") String id) {
         Map<String, Object> map = iBmsPostService.viewTopic(principal,id);

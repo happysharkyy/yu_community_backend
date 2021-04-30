@@ -50,7 +50,6 @@ public class RecommendController {
 
         // 3.找出与id为1L的用户浏览行为最相似的前5个用户
         List<String> userIds = RecommendUtils.getSimilarityBetweenUsers(sysUser.getId(), userSimilarityList, 5);
-        System.out.println("与1349618748226658305"  + "号用户最相似的前5个用户为：");
         for (String userRefId : userIds) {
             System.out.println(userRefId);
         }

@@ -23,6 +23,7 @@ import com.douyuehan.doubao.model.vo.BmsPostVO;
 import com.douyuehan.doubao.model.vo.PostVO;
 import com.douyuehan.doubao.model.vo.ProfileVO;
 import com.douyuehan.doubao.service.*;
+import com.douyuehan.doubao.utils.SysSensitiveFilterUtil;
 import com.vdurmont.emoji.EmojiParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +48,9 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     private SysUserMapper umsUserMapper;
 
     @Autowired
+    SysSensitiveFilterUtil sysSensitiveFilterUtil;
+
+    @Autowired
     @Lazy
     private IBmsTagService iBmsTagService;
 
@@ -60,6 +64,9 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     private IBehaviorUserLogService iBehaviorUserLogService;
     @Autowired
     private com.douyuehan.doubao.service.IBmsTopicTagService IBmsTopicTagService;
+
+    @Resource
+    private IBmsFollowService bmsFollowService;
     @Override
     public Page<PostVO> getList(Page<PostVO> page, String tab) {
         // 查询话题
@@ -72,13 +79,11 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BmsPost create(CreateTopicDTO dto, SysUser user) {
-        BmsPost topic1 = this.baseMapper.selectOne(new LambdaQueryWrapper<BmsPost>().eq(BmsPost::getTitle, dto.getTitle()));
-        Assert.isNull(topic1, "话题已存在，请修改");
         // 封装
         BmsPost topic = BmsPost.builder()
                 .userId(user.getId())
                 .title(dto.getTitle())
-                .content(EmojiParser.parseToAliases(dto.getContent()))
+                .content(sysSensitiveFilterUtil.filter(EmojiParser.parseToAliases(dto.getContent())))
                 .createTime(new Date())
                 .build();
         this.baseMapper.insert(topic);
@@ -88,6 +93,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         // 用户积分增加
         int newScore = user.getScore() + 1;
         umsUserMapper.updateById(user.setScore(newScore));
+
 
         // 标签
         if (!ObjectUtils.isEmpty(dto.getTags())) {
@@ -235,6 +241,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
              recommendate) {
             BmsPost bmsPost = this.baseMapper.selectById(s);
             BmsPostVO bmsPostVO = new BmsPostVO();
+            bmsPostVO.setUsername(iUmsUserService.getById(bmsPost.getUserId()).getUsername());
             BeanUtil.copyProperties(bmsPost,bmsPostVO);
             bmsPostVO.setStatus("1");
             list.add(bmsPostVO);
@@ -264,6 +271,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
                     BmsPost bmsPost = listAll.get(iterable.next());
                     BmsPostVO bmsPostVO = new BmsPostVO();
                     BeanUtil.copyProperties(bmsPost, bmsPostVO);
+                    bmsPostVO.setUsername(iUmsUserService.getById(bmsPost.getUserId()).getUsername());
                     bmsPostVO.setStatus("0");
                     list.add(bmsPostVO);
                 }
@@ -334,6 +342,26 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     @Override
     public List<RankViewDTO> getViewRank() {
         return this.baseMapper.getViewRank();
+    }
+
+    @Override
+    public List<BmsPost> getListFllow(Page<PostVO> page, Principal principal) {
+        SysUser sysUser = iUmsUserService.getUserByUsername(principal.getName());
+        LambdaQueryWrapper<BmsFollow> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BmsFollow::getParentId,sysUser.getId());
+        List<BmsFollow> list = bmsFollowService.list(queryWrapper);
+        List<BmsPost> result = new ArrayList<>();
+        for (BmsFollow b:
+             list) {
+            LambdaQueryWrapper<BmsPost> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(BmsPost::getUserId,b.getFollowerId());
+            List<BmsPost> temp = this.baseMapper.selectList(queryWrapper1);
+            for (BmsPost b1:
+                 temp) {
+                result.add(b1);
+            }
+        }
+        return result;
     }
 
 

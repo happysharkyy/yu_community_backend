@@ -8,12 +8,13 @@
         <result column="user_id" property="userId"/>
         <result column="topic_id" property="topicId"/>
         <result column="username" property="username"/>
+        <result column="avatar" property="avatar"/>
         <result column="create_time" property="createTime"/>
         <result column="is_del" property="isDel"/>
     </resultMap>
 
     <select id="getCommentsByTopicID" resultMap="topicVO">
-        select bms_comment.*,sys_user.username
+        select bms_comment.*,sys_user.username,sys_user.avatar
         from bms_comment
         join sys_user on sys_user.id = bms_comment.user_id
         where topic_id = #{topicid}

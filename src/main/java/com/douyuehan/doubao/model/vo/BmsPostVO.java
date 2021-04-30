@@ -19,6 +19,14 @@ public class BmsPostVO implements Serializable {
         return serialVersionUID;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getId() {
         return id;
     }
@@ -190,6 +198,9 @@ public class BmsPostVO implements Serializable {
     @TableField("essence")
     @Builder.Default
     private Boolean essence = false;
+
+    @TableField("username")
+    private String username;
 
     /**
      * 创建时间

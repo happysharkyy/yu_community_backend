@@ -1,10 +1,14 @@
 package com.douyuehan.doubao.utils;
 
 
+import com.douyuehan.doubao.model.entity.SysSensitive;
+import com.douyuehan.doubao.service.SysSensitiveService;
+import lombok.experimental.Accessors;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -13,11 +17,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
 public class SysSensitiveFilterUtil {
 
+    @Autowired
+    SysSensitiveService sysSensitiveService;
     //logger打印日志
     private static final Logger logger = LoggerFactory.getLogger(SysSensitiveFilterUtil.class);
 
@@ -30,20 +37,25 @@ public class SysSensitiveFilterUtil {
     //注解表示这是一个初始化方法，创建实例后，方法执行。服务启动，就创建了实例，就执行init
     @PostConstruct
     public void init() {
-        try (
-                //这句代码表示从target目录的class文件夹读取文件
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream("sensitive-words.txt");
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        ) {
-            String keyword;
-            //读取缓冲流每一行的敏感词
-            while ((keyword = reader.readLine()) != null) {
-                // 添加到前缀树
-                this.addKeyword(keyword);
-            }
-        } catch (IOException e) {
-            logger.error("加载敏感词文件失败: " + e.getMessage());
+         List<SysSensitive> list = sysSensitiveService.getList();
+        for (SysSensitive s :
+                list) {
+            this.addKeyword(s.getText());
         }
+//        try (
+//                //这句代码表示从target目录的class文件夹读取文件
+//                InputStream is = this.getClass().getClassLoader().getResourceAsStream("sensitive-words.txt");
+//                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+//        ) {
+//            String keyword;
+//            //读取缓冲流每一行的敏感词
+//            while ((keyword = reader.readLine()) != null) {
+//                // 添加到前缀树
+//                this.addKeyword(keyword);
+//            }
+//        } catch (IOException e) {
+//            logger.error("加载敏感词文件失败: " + e.getMessage());
+//        }
     }
 
     // 将一个敏感词添加到前缀树中
