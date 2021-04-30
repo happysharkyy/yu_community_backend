@@ -1,6 +1,7 @@
 package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -222,6 +224,20 @@ public class IUmsUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> imp
         }else{
             return ApiResult.success(updateById(record));
         }
+    }
+
+    @Override
+    public int getTodayAddUser() {
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Calendar calendar=java.util.Calendar.getInstance();
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,-1);
+        String last = df.format(calendar.getTime());
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+        String next = df.format(calendar.getTime());
+        queryWrapper.ge(SysUser::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+        List<SysUser> list = this.baseMapper.selectList(queryWrapper);
+        return list.size();
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.douyuehan.doubao.mapper.SysStarMapper;
 import com.douyuehan.doubao.model.dto.SysStarDTO;
 import com.douyuehan.doubao.model.entity.Behavior;
+import com.douyuehan.doubao.model.entity.BmsComment;
 import com.douyuehan.doubao.model.entity.SysStar;
 import com.douyuehan.doubao.service.IBehaviorService;
 import com.douyuehan.doubao.service.IBehaviorUserLogService;
@@ -15,6 +16,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 @Slf4j
@@ -77,5 +79,17 @@ public class SysStarServiceImpl  extends ServiceImpl<SysStarMapper, SysStar> imp
         }
 
         return 1;
+    }
+    @Override
+    public int getTodayAddStar() {
+        LambdaQueryWrapper<SysStar> queryWrapper = new LambdaQueryWrapper<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Calendar calendar=java.util.Calendar.getInstance();
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,-1);
+        String last = df.format(calendar.getTime());
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+        String next = df.format(calendar.getTime());
+        queryWrapper.ge(SysStar::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+        return this.baseMapper.selectCount(queryWrapper);
     }
 }

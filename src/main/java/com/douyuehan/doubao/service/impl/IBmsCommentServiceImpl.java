@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -90,5 +91,17 @@ public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsCom
         IPage<BmsComment> result = this.baseMapper.selectPage(page, queryWrapper);;
         pageResult = new PageResult(result);
         return pageResult;
+    }
+    @Override
+    public int getTodayAddComment() {
+        LambdaQueryWrapper<BmsComment> queryWrapper = new LambdaQueryWrapper<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Calendar calendar=java.util.Calendar.getInstance();
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,-1);
+        String last = df.format(calendar.getTime());
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+        String next = df.format(calendar.getTime());
+        queryWrapper.ge(BmsComment::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+        return this.baseMapper.selectCount(queryWrapper);
     }
 }

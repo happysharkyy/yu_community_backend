@@ -9,6 +9,8 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+
 @Data
 @Builder
 @Accessors(chain = true)
@@ -56,4 +58,6 @@ public class Activity implements Serializable{
     @TableField("is_del")
     private int isDel;
 
+    @TableField(exist = false)
+    private List<ActivityUser> list;
 }

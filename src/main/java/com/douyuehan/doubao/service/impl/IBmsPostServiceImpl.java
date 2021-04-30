@@ -1,9 +1,11 @@
 package com.douyuehan.doubao.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.douyuehan.doubao.common.api.ColumnFilter;
@@ -13,7 +15,11 @@ import com.douyuehan.doubao.mapper.BmsTagMapper;
 import com.douyuehan.doubao.mapper.BmsTopicMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
+import com.douyuehan.doubao.model.dto.RankDTO;
+import com.douyuehan.doubao.model.dto.RankViewDTO;
+import com.douyuehan.doubao.model.dto.ResultDTO;
 import com.douyuehan.doubao.model.entity.*;
+import com.douyuehan.doubao.model.vo.BmsPostVO;
 import com.douyuehan.doubao.model.vo.PostVO;
 import com.douyuehan.doubao.model.vo.ProfileVO;
 import com.douyuehan.doubao.service.*;
@@ -28,6 +34,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -220,4 +227,114 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         pageResult = new PageResult(result);
         return pageResult;
     }
+
+    @Override
+    public List<BmsPostVO> getByListId(Set<String> recommendate) {
+        List<BmsPostVO> list = new ArrayList<>();
+        for (String s:
+             recommendate) {
+            BmsPost bmsPost = this.baseMapper.selectById(s);
+            BmsPostVO bmsPostVO = new BmsPostVO();
+            BeanUtil.copyProperties(bmsPost,bmsPostVO);
+            bmsPostVO.setStatus("1");
+            list.add(bmsPostVO);
+        }
+        int val = 15 - list.size();//满不满足15条数据
+        List<BmsPost> listAll = this.baseMapper.selectList(null);
+        if(val>0) {
+            Iterator<BmsPost> it = listAll.iterator();
+            while (it.hasNext()) {
+                String str = it.next().getId();
+                list.forEach(item -> {
+                    if (str.equals(item.getId())) {
+                        it.remove();
+                    }
+                });
+            }
+            System.out.println("还差" + val + "个元素，listAll size:" + listAll.size());
+
+            HashSet<Integer> hashSet = new HashSet<>();
+            Random random = new Random();
+            while (hashSet.size() < val) {
+                hashSet.add(random.nextInt(listAll.size()));
+            }
+            Iterator<Integer> iterable = hashSet.iterator();
+            for (int i = 0; i < hashSet.size(); i++) {
+                if(iterable.hasNext()) {
+                    BmsPost bmsPost = listAll.get(iterable.next());
+                    BmsPostVO bmsPostVO = new BmsPostVO();
+                    BeanUtil.copyProperties(bmsPost, bmsPostVO);
+                    bmsPostVO.setStatus("0");
+                    list.add(bmsPostVO);
+                }
+            }
+        }
+        return list;
+    }
+    @Override
+    public int getTodayAddPost() {
+        LambdaQueryWrapper<BmsPost> queryWrapper = new LambdaQueryWrapper<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Calendar calendar=java.util.Calendar.getInstance();
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,-1);
+        String last = df.format(calendar.getTime());
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+        String next = df.format(calendar.getTime());
+        queryWrapper.ge(BmsPost::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+        return this.baseMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public ResultDTO getMonthAddPost() {
+        List<String> key = new ArrayList<>();
+        List<String> val = new ArrayList<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US);
+        for (int i = 30; i >0; i--) {
+            LambdaQueryWrapper<BmsPost> queryWrapper = new LambdaQueryWrapper<>();
+            java.util.Calendar calendar=java.util.Calendar.getInstance();
+            calendar.roll(java.util.Calendar.DAY_OF_YEAR,-i);
+            String last = df.format(calendar.getTime());
+            calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+            String next = df.format(calendar.getTime());
+            queryWrapper.ge(BmsPost::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+            Date date = new Date();
+            try{
+                date = sdf.parse(calendar.getTime().toString());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            key.add(new SimpleDateFormat("MM-dd").format(date));
+            val.add(this.baseMapper.selectCount(queryWrapper).toString());
+        }
+        ResultDTO resultDTO = new ResultDTO();
+        resultDTO.setKeyList(key);
+        resultDTO.setResultList(val);
+
+        return resultDTO;
+    }
+
+    @Override
+    public RankDTO getRank() {
+        List<String> key = new ArrayList<>();
+        List<String> val = new ArrayList<>();
+        List<RankDTO> list =  this.baseMapper.getRank();
+        for (RankDTO rankDTO:
+             list) {
+            key.add(rankDTO.getAlias());
+            val.add(String.valueOf(rankDTO.getCount()));
+        }
+        RankDTO rankDTO = new RankDTO();
+        rankDTO.setKey(key);
+        rankDTO.setResult(val);
+        return rankDTO;
+    }
+
+    @Override
+    public List<RankViewDTO> getViewRank() {
+        return this.baseMapper.getViewRank();
+    }
+
+
 }

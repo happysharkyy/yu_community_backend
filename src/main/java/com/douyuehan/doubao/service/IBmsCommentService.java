@@ -23,4 +23,5 @@ public interface IBmsCommentService extends IService<BmsComment> {
     BmsComment create(CommentDTO dto, SysUser principal);
 
     PageResult findPage(PageRequest pageRequest);
+    int getTodayAddComment();
 }

@@ -46,4 +46,8 @@ public class BmsCommentController extends BaseController {
         System.out.println(bmsCommentService.findPage(pageRequest));
         return ApiResult.success(bmsCommentService.findPage(pageRequest));
     }
+    @GetMapping(value="/getTodayAddComment")
+    public ApiResult getTodayAddComment() {
+        return ApiResult.success(bmsCommentService.getTodayAddComment());
+    }
 }

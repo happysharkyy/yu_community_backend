@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.douyuehan.doubao.common.api.ApiResult;
 import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.model.dto.TagRankDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
 import com.douyuehan.doubao.model.entity.BmsTopicTag;
@@ -92,6 +93,9 @@ public class BmsTagController extends BaseController {
         iBmsTopicTagService.createTopicTag(topicId, tagList);
         return ApiResult.success();
     }
-
+    @GetMapping(value="/getTagRank")
+    public ApiResult<List<TagRankDTO>> getRank() {
+        return ApiResult.success(bmsTagService.getTagRank());
+    }
 
 }

@@ -32,4 +32,9 @@ public class SysStarController extends BaseController {
         System.out.println(dto.toString()+"------------");
         return ApiResult.success(sysStarService.save_star(dto));
     }
+    @GetMapping(value="/getTodayAddStar")
+    public ApiResult getTodayAddStar() {
+        return ApiResult.success(sysStarService.getTodayAddStar());
+    }
+
 }

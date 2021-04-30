@@ -8,6 +8,7 @@ import com.douyuehan.doubao.common.api.ColumnFilter;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.BmsTagMapper;
+import com.douyuehan.doubao.model.dto.TagRankDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.BmsTag;
 import com.douyuehan.doubao.service.IBmsTagService;
@@ -82,6 +83,11 @@ public class IBmsTagServiceImpl extends ServiceImpl<BmsTagMapper, BmsTag> implem
         IPage<BmsTag> result = this.baseMapper.selectPage(page, queryWrapper);;
         pageResult = new PageResult(result);
         return pageResult;
+    }
+
+    @Override
+    public List<TagRankDTO> getTagRank() {
+        return this.baseMapper.getTagRank();
     }
 
 }

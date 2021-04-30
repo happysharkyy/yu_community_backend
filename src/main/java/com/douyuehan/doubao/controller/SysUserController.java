@@ -75,19 +75,19 @@ public class SysUserController extends BaseController {
         Assert.notNull(user, "用户不存在");
         return ApiResult.success(user);
     }
-    @GetMapping("/{username}")
-    public ApiResult<Map<String, Object>> getUserByName(@PathVariable("username") String username,
-                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
-                                                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        Map<String, Object> map = new HashMap<>(16);
-        SysUser user = iUmsUserService.getUserByUsername(username);
-        Assert.notNull(user, "用户不存在");
-        Page<BmsPost> page = iBmsPostService.page(new Page<>(pageNo, size),
-                new LambdaQueryWrapper<BmsPost>().eq(BmsPost::getUserId, user.getId()));
-        map.put("user", user);
-        map.put("topics", page);
-        return ApiResult.success(map);
-    }
+//    @GetMapping("/{username}")
+//    public ApiResult<Map<String, Object>> getUserByName(@PathVariable("username") String username,
+//                                                        @RequestParam(value = "pageNo", defaultValue = "1") Integer pageNo,
+//                                                        @RequestParam(value = "size", defaultValue = "10") Integer size) {
+//        Map<String, Object> map = new HashMap<>(16);
+//        SysUser user = iUmsUserService.getUserByUsername(username);
+//        Assert.notNull(user, "用户不存在");
+//        Page<BmsPost> page = iBmsPostService.page(new Page<>(pageNo, size),
+//                new LambdaQueryWrapper<BmsPost>().eq(BmsPost::getUserId, user.getId()));
+//        map.put("user", user);
+//        map.put("topics", page);
+//        return ApiResult.success(map);
+//    }
     @PostMapping(value="/update")
     public ApiResult<SysUser> updateUser(@RequestBody SysUser sysUser) {
 
@@ -158,5 +158,9 @@ public class SysUserController extends BaseController {
             }
         }
         return ApiResult.success("成功");
+    }
+    @GetMapping(value="/getTodayAddUser/list")
+    public ApiResult getTodayAddUser() {
+        return ApiResult.success(iUmsUserService.getTodayAddUser());
     }
 }

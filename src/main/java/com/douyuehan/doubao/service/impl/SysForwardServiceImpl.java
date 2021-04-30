@@ -6,6 +6,7 @@ import com.douyuehan.doubao.mapper.SysForwardMapper;
 import com.douyuehan.doubao.model.dto.SysForwardDTO;
 import com.douyuehan.doubao.model.entity.Behavior;
 import com.douyuehan.doubao.model.entity.SysForward;
+import com.douyuehan.doubao.model.entity.SysStar;
 import com.douyuehan.doubao.service.IBehaviorService;
 import com.douyuehan.doubao.service.IBehaviorUserLogService;
 import com.douyuehan.doubao.service.SysForwardService;
@@ -14,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -53,5 +55,17 @@ public class SysForwardServiceImpl extends ServiceImpl<SysForwardMapper, SysForw
         queryWrapper.eq(Behavior::getPostId,dto.getObjId());
         iBehaviorService.update(behavior,queryWrapper);
         return sysForwardMapper.insert(sysForward);
+    }
+    @Override
+    public int getTodayAddForward() {
+        LambdaQueryWrapper<SysForward> queryWrapper = new LambdaQueryWrapper<>();
+        SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Calendar calendar=java.util.Calendar.getInstance();
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,-1);
+        String last = df.format(calendar.getTime());
+        calendar.roll(java.util.Calendar.DAY_OF_YEAR,1);
+        String next = df.format(calendar.getTime());
+        queryWrapper.ge(SysForward::getCreateTime, last).apply("DATE_FORMAT(create_time,'%Y-%m-%d') <= DATE_FORMAT({0},'%Y-%m-%d')", next);
+        return this.baseMapper.selectCount(queryWrapper);
     }
 }

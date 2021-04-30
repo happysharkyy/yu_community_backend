@@ -5,13 +5,16 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.dto.CreateTopicDTO;
+import com.douyuehan.doubao.model.dto.RankDTO;
+import com.douyuehan.doubao.model.dto.RankViewDTO;
+import com.douyuehan.doubao.model.dto.ResultDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.model.vo.BmsPostVO;
 import com.douyuehan.doubao.model.vo.PostVO;
 
 import java.security.Principal;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public interface IBmsPostService extends IService<BmsPost> {
@@ -58,4 +61,13 @@ public interface IBmsPostService extends IService<BmsPost> {
 
     PageResult findPage(PageRequest pageRequest);
 
+    List<BmsPostVO> getByListId(Set<String> recommendate);
+
+    int getTodayAddPost();
+
+    public ResultDTO  getMonthAddPost();
+
+    RankDTO getRank();
+
+    List<RankViewDTO> getViewRank();
 }

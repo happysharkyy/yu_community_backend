@@ -92,5 +92,20 @@ public class BmsPostController extends BaseController {
         System.out.println(iBmsPostService.findPage(pageRequest));
         return ApiResult.success(iBmsPostService.findPage(pageRequest));
     }
-
+    @GetMapping(value="/getTodayAddPost")
+    public ApiResult getTodayAddPost() {
+        return ApiResult.success(iBmsPostService.getTodayAddPost());
+    }
+    @GetMapping(value="/getMonthAddPost")
+    public ApiResult getMonthAddPost() {
+        return ApiResult.success(iBmsPostService.getMonthAddPost());
+    }
+    @GetMapping(value="/getRank")
+    public ApiResult getRank() {
+        return ApiResult.success(iBmsPostService.getRank());
+    }
+    @GetMapping(value="/getViewRank")
+    public ApiResult getViewRank() {
+        return ApiResult.success(iBmsPostService.getViewRank());
+    }
 }

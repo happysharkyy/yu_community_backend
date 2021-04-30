@@ -3,6 +3,7 @@ package com.douyuehan.doubao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.douyuehan.doubao.model.dto.ChatMessageDTO;
 import com.douyuehan.doubao.model.entity.ChatMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

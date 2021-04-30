@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -39,4 +40,6 @@ public class ActivityUser {
     @TableField("is_del")
     private int isDel;
 
+    @TableField(exist = false)
+    private SysUser sysUser;
 }

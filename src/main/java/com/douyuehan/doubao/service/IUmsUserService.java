@@ -55,5 +55,7 @@ public interface IUmsUserService extends IService<SysUser> {
     Set<String> findPermissions(String userName);
 
     ApiResult saveUser(SysUser record);
+
+    int getTodayAddUser();
 //    List<SysUserRole> findUserRoles(Long userId);
 }

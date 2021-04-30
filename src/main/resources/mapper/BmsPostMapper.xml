@@ -75,4 +75,13 @@
         </where>
         order by t.view desc, t.create_time desc
     </select>
+    <select id="getRank" resultType="com.douyuehan.doubao.model.dto.RankDTO">
+        SELECT u.alias as alias,count(*) as `count`
+        FROM bms_post p ,
+        sys_user u where u.id = p.user_id  GROUP BY user_id  ORDER BY `count` DESC
+    </select>
+
+    <select id="getViewRank" resultType="com.douyuehan.doubao.model.dto.RankViewDTO">
+        SELECT title as `name` ,`view` as `value` FROM  bms_post  ORDER BY `value`  DESC limit 6
+    </select>
 </mapper>

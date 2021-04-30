@@ -6,6 +6,7 @@ import com.douyuehan.doubao.mapper.ActivityMapper;
 import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.entity.ActivityUser;
 import com.douyuehan.doubao.service.ActivityService;
+import com.douyuehan.doubao.service.ActivityUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +16,18 @@ import java.util.List;
 public class ActivityServiceImpl  extends ServiceImpl<ActivityMapper, Activity> implements ActivityService {
     @Autowired
     ActivityMapper activityMapper;
+    @Autowired
+    ActivityUserService activityUserService;
 
     public List<Activity> listGoodsVo() {
         return activityMapper.selectList(new LambdaQueryWrapper<>());
     }
 
     public Activity getGoodsVoByGoodsId(Long goodsId) {
-        return activityMapper.selectById(goodsId);
+        Activity activity = activityMapper.selectById(goodsId);
+        List<ActivityUser> list = activityUserService.getOrderByActivity(activity.getId());
+        activity.setList(list);
+        return activity;
     }
 
     /**

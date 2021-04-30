@@ -9,4 +9,5 @@ import java.util.List;
 public interface SysStarService {
     List<SysStar> select(String objId, String Type);
     int save_star(SysStarDTO dto);
+    int getTodayAddStar();
 }

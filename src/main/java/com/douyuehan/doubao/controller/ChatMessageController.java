@@ -1,12 +1,15 @@
 package com.douyuehan.doubao.controller;
 
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.model.dto.ChatMessageDTO;
+import com.douyuehan.doubao.model.entity.ChatMessage;
 import com.douyuehan.doubao.service.IUmsUserService;
 import com.douyuehan.doubao.service.ChatMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("sysMessage")
@@ -28,5 +31,10 @@ public class ChatMessageController {
     public ApiResult findMessageByUserId(Principal principal) {
         return ApiResult.success(chatMessageService.findUnreadCountAll(iUmsUserService.getUserByUsername(principal.getName()).getId()));
     }
+    @GetMapping(value="/getMessageAll")
+    public ApiResult<List<ChatMessageDTO>> getMessageAll() {
+        return ApiResult.success(chatMessageService.getMessageAll());
+    }
+
 
 }

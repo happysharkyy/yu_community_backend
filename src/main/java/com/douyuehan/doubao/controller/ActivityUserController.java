@@ -26,6 +26,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,10 +72,10 @@ public class ActivityUserController  implements InitializingBean {
     }
 
     @AccessLimit(seconds = 5, maxCount = 5)
-    @GetMapping("/{path}/{userId}/do_miaosha")
-    public  ApiResult miaosha(@PathVariable("userId") String userId) {
-        SysUser user = iUmsUserService.getById(userId);
-        int goodsId = 1;
+    @GetMapping("/do_miaosha/{goodsId}")
+    public  ApiResult miaosha(Principal principal,@PathVariable int goodsId) {
+        SysUser user = iUmsUserService.getUserByUsername(principal.getName());
+
         // 未登录
         if (null == user) {
             return ApiResult.failed(CodeMsg.SESSION_ERROR);

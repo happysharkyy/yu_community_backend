@@ -8,4 +8,5 @@ import java.util.List;
 public interface SysForwardService {
     List<SysForward> select(String objId, String Type);
     int save_Forward(SysForwardDTO dto);
+    int getTodayAddForward();
 }

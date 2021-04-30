@@ -2,6 +2,8 @@ package com.douyuehan.doubao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.douyuehan.doubao.model.dto.RankDTO;
+import com.douyuehan.doubao.model.dto.RankViewDTO;
 import com.douyuehan.doubao.model.entity.BmsPost;
 import com.douyuehan.doubao.model.vo.PostVO;
 import org.apache.ibatis.annotations.Param;
@@ -36,4 +38,8 @@ public interface BmsTopicMapper extends BaseMapper<BmsPost> {
      * @return
      */
     Page<PostVO> searchByKey(@Param("page") Page<PostVO> page, @Param("keyword") String keyword);
+
+    List<RankDTO> getRank();
+
+    List<RankViewDTO> getViewRank();
 }

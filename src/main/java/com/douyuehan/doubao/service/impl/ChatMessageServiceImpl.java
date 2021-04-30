@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.douyuehan.doubao.mapper.ChatMessageMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
+import com.douyuehan.doubao.model.dto.ChatMessageDTO;
 import com.douyuehan.doubao.model.entity.ChatMessage;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.MsgVO;
@@ -121,6 +122,27 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
         queryWrapper.eq(ChatMessage::getStatus,0);
         chatMessageMapper.selectList(queryWrapper);
         return  chatMessageMapper.selectList(queryWrapper).size();
+    }
+
+    @Override
+    public List<ChatMessageDTO> getMessageAll() {
+        List<ChatMessage> list = chatMessageMapper.selectList(null);
+        List<ChatMessageDTO> result = new ArrayList<>();
+        int i=0;
+        for (ChatMessage s:
+                list) {
+            ChatMessageDTO s1 = new ChatMessageDTO();
+            s1.setContent(EmojiParser.parseToUnicode(s.getContent()));
+            SysUser sysUser = sysUserMapper.selectById(s.getFromId());
+            s1.setFromUserName(sysUser.getUsername());
+            SysUser sysUser1 = sysUserMapper.selectById(s.getToId());
+            s1.setToUserName(sysUser1.getUsername());
+            s1.setCreateTime(s.getCreateTime());
+            s1.setId(i++);
+            result.add(s1);
+        }
+
+        return result;
     }
 
 }

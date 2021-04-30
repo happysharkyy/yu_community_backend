@@ -25,4 +25,8 @@ public class SysForwardController extends BaseController {
         System.out.println(dto.toString()+"------------");
         return ApiResult.success(sysForwardService.save_Forward(dto));
     }
+    @GetMapping(value="/getTodayAddForward")
+    public ApiResult getTodayAddForward() {
+        return ApiResult.success(sysForwardService.getTodayAddForward());
+    }
 }
