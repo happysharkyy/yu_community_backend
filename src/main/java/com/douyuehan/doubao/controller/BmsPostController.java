@@ -42,9 +42,9 @@ public class BmsPostController extends BaseController {
         return ApiResult.success(list);
     }
     @GetMapping("/list/follow")
-    public ApiResult<List<BmsPost>> follow(Principal principal,@RequestParam(value = "pageNo", defaultValue = "1")  Integer pageNo,
-                                        @RequestParam(value = "size", defaultValue = "+1") Integer pageSize) {
-        List<BmsPost> list= iBmsPostService.getListFllow(new Page<>(pageNo, pageSize), principal);;
+    public ApiResult<List<PostVO>> follow(Principal principal) {
+        System.out.println(principal.toString()+"11111111111");
+        List<PostVO> list= iBmsPostService.getListFllow(principal);;
         return ApiResult.success(list);
     }
     @RequestMapping(value = "/create", method = RequestMethod.POST)

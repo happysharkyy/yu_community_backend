@@ -2,11 +2,16 @@ package com.douyuehan.doubao.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ColumnFilter;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.ChatMessageMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
 import com.douyuehan.doubao.model.dto.ChatMessageDTO;
+import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.entity.ChatMessage;
 import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.MsgVO;
@@ -15,6 +20,7 @@ import com.douyuehan.doubao.utils.SysSensitiveFilterUtil;
 import com.vdurmont.emoji.EmojiParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.HtmlUtils;
 
 import java.util.ArrayList;
@@ -69,15 +75,16 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
             s1.setFromUser(sysUser.getUsername());
             SysUser sysUser1 = sysUserMapper.selectById(s.getToId());
             s1.setToUserDetail(sysUser1);
-            s1.setCreateTime(s.getCreateTime());
             s1.setToUser(sysUser1.getUsername());
+
+            s1.setCreateTime(s.getCreateTime());
             result.add(s1);
             read.add(s.getId());
         }
         if(!read.isEmpty()){
             readSysMessage(read,userId);
         }
-
+        System.out.println(result);
         return result;
     }
 
@@ -143,6 +150,41 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
         }
 
         return result;
+    }
+
+    @Override
+    public PageResult findPage(PageRequest pageRequest) {
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get("content");
+        LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
+        if (columnFilter != null && !StringUtils.isEmpty(columnFilter.getValue())) {
+            wrapper.eq(ChatMessage::getContent, columnFilter.getValue());
+        }
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        Page<ChatMessage> page = new Page<>(pageNum, pageSize);
+        IPage<ChatMessage> result = this.baseMapper.selectPage(page, wrapper);
+
+//        List<ChatMessageDTO> result = new ArrayList<>();
+        int i=0;
+        for (ChatMessage s:
+                result.getRecords()) {
+
+            s.setContent(EmojiParser.parseToUnicode(s.getContent()));
+            SysUser sysUser = sysUserMapper.selectById(s.getFromId());
+            s.setFromUser(sysUser);
+            s.setFromUserName(sysUser.getUsername());
+            SysUser sysUser1 = sysUserMapper.selectById(s.getToId());
+            s.setToUser(sysUser1);
+            s.setToUserName(sysUser1.getUsername());
+            if(s.getStatus()==1){
+                s.setStatusDetail("已读");
+            }else{
+                s.setStatusDetail("未读");
+            }
+        }
+
+        PageResult pageResult = new PageResult(result);
+        return pageResult;
     }
 
 }

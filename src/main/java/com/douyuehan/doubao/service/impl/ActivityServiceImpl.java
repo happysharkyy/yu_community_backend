@@ -1,14 +1,21 @@
 package com.douyuehan.doubao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.douyuehan.doubao.common.api.ColumnFilter;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.ActivityMapper;
 import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.entity.ActivityUser;
+import com.douyuehan.doubao.model.entity.BmsPromotion;
 import com.douyuehan.doubao.service.ActivityService;
 import com.douyuehan.doubao.service.ActivityUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -28,6 +35,21 @@ public class ActivityServiceImpl  extends ServiceImpl<ActivityMapper, Activity> 
         List<ActivityUser> list = activityUserService.getOrderByActivity(activity.getId());
         activity.setList(list);
         return activity;
+    }
+
+    @Override
+    public PageResult findPage(PageRequest pageRequest) {
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get("title");
+        LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
+        if (columnFilter != null && !StringUtils.isEmpty(columnFilter.getValue())) {
+            wrapper.eq(Activity::getTitle, columnFilter.getValue());
+        }
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        Page<Activity> page = new Page<>(pageNum, pageSize);
+        IPage<Activity> result = this.baseMapper.selectPage(page, wrapper);
+        PageResult pageResult = new PageResult(result);
+        return pageResult;
     }
 
     /**

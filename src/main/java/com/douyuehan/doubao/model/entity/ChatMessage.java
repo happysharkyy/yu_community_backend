@@ -25,5 +25,11 @@ public class ChatMessage {
     private SysUser toUser;
     @TableField(exist = false)
     private int cal;
+    @TableField(exist = false)
+    private String fromUserName;
+    @TableField(exist = false)
+    private String toUserName;
+    @TableField(exist = false)
+    private String statusDetail;
 
 }

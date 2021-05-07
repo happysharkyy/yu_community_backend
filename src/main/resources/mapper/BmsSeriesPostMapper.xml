@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.douyuehan.doubao.mapper.BmsSeriesPostMapper">
+    <select id="selectSeriesIdsByPostId" resultType="java.lang.String">
+        SELECT t.series_id
+        from bms_series_post t
+        where t.post_id = #{id}
+    </select>
+    <select id="findPostBySeries" resultType="com.douyuehan.doubao.model.entity.BmsSeriesPost">
+        SELECT *
+        from bms_series_post t
+        where t.series_id = #{seriesId}
+    </select>
+</mapper>

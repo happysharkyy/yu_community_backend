@@ -1,11 +1,10 @@
 package com.douyuehan.doubao.controller;
 
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.entity.BmsPromotion;
 import com.douyuehan.doubao.service.IBmsPromotionService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -22,6 +21,10 @@ public class BmsPromotionController extends BaseController {
     public ApiResult<List<BmsPromotion>> list() {
         List<BmsPromotion> list = bmsPromotionService.list();
         return ApiResult.success(list);
+    }
+    @PostMapping("/findPage")
+    public ApiResult findPage(@RequestBody PageRequest pageRequest) {
+        return ApiResult.success(bmsPromotionService.findPage(pageRequest));
     }
 
 }

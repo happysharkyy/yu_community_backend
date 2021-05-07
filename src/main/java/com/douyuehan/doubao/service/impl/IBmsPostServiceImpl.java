@@ -25,6 +25,7 @@ import com.douyuehan.doubao.model.vo.ProfileVO;
 import com.douyuehan.doubao.service.*;
 import com.douyuehan.doubao.utils.SysSensitiveFilterUtil;
 import com.vdurmont.emoji.EmojiParser;
+import io.micrometer.core.instrument.Tags;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -67,6 +68,8 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
 
     @Resource
     private IBmsFollowService bmsFollowService;
+    @Autowired
+    private IBmsTopicTagService iBmsTopicTagService;
     @Override
     public Page<PostVO> getList(Page<PostVO> page, String tab) {
         // 查询话题
@@ -75,7 +78,49 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         setTopicTags(iPage);
         return iPage;
     }
+    @Override
+    public List<PostVO> getListFllow(Principal principal) {
+        SysUser sysUser = iUmsUserService.getUserByUsername(principal.getName());
+        LambdaQueryWrapper<BmsFollow> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BmsFollow::getFollowerId,sysUser.getId());
+        List<BmsFollow> list = bmsFollowService.list(queryWrapper);
+        List<PostVO> result = new ArrayList<>();
+        for (BmsFollow b:
+                list) {
+            LambdaQueryWrapper<BmsPost> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(BmsPost::getUserId,b.getFollowerId());
+            List<BmsPost> temp = this.baseMapper.selectList(queryWrapper1);
+            for (BmsPost b1:
+                    temp) {
+                PostVO postVO = new PostVO();
+                SysUser sysUser1 = iUmsUserService.getById(b1.getUserId());
+                postVO.setAvatar(sysUser1.getAvatar());
+                postVO.setUserId(b1.getUserId());
+                postVO.setAlias(sysUser1.getAlias());
+                List<BmsTag> bmsTagList = new ArrayList<>();
+                List<BmsTopicTag> topicTagList =  iBmsTopicTagService.selectByTopicId(b1.getId());
+                for (BmsTopicTag bmsTopicTag:
+                     topicTagList) {
+                    bmsTagList.add(iBmsTagService.getById(bmsTopicTag.getTagId()));
+                }
+                postVO.setTags(bmsTagList);
+                postVO.setTitle(b1.getTitle());
+                postVO.setCreateTime(b1.getCreateTime());
+                postVO.setView(b1.getView());
+                result.add(postVO);
+            }
+        }
+//        SimpleDateFormat sdft = new SimpleDateFormat("yyyy-MM-DD HH-MM-ss");
+        Collections.sort(result, new Comparator<PostVO>() {
+            @Override
+            public int compare(PostVO o1, PostVO o2) {
+                int flag = o2.getCreateTime().compareTo(o1.getCreateTime());
+                return flag;
+            }
+        });
 
+        return result;
+    }
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BmsPost create(CreateTopicDTO dto, SysUser user) {
@@ -344,25 +389,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         return this.baseMapper.getViewRank();
     }
 
-    @Override
-    public List<BmsPost> getListFllow(Page<PostVO> page, Principal principal) {
-        SysUser sysUser = iUmsUserService.getUserByUsername(principal.getName());
-        LambdaQueryWrapper<BmsFollow> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(BmsFollow::getParentId,sysUser.getId());
-        List<BmsFollow> list = bmsFollowService.list(queryWrapper);
-        List<BmsPost> result = new ArrayList<>();
-        for (BmsFollow b:
-             list) {
-            LambdaQueryWrapper<BmsPost> queryWrapper1 = new LambdaQueryWrapper<>();
-            queryWrapper1.eq(BmsPost::getUserId,b.getFollowerId());
-            List<BmsPost> temp = this.baseMapper.selectList(queryWrapper1);
-            for (BmsPost b1:
-                 temp) {
-                result.add(b1);
-            }
-        }
-        return result;
-    }
+
 
 
 }

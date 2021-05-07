@@ -1,6 +1,7 @@
 package com.douyuehan.doubao.controller;
 
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.dto.ChatMessageDTO;
 import com.douyuehan.doubao.model.entity.ChatMessage;
 import com.douyuehan.doubao.service.IUmsUserService;
@@ -36,5 +37,8 @@ public class ChatMessageController {
         return ApiResult.success(chatMessageService.getMessageAll());
     }
 
-
+    @PostMapping("/findPage")
+    public ApiResult findPage(@RequestBody PageRequest pageRequest) {
+        return ApiResult.success(chatMessageService.findPage(pageRequest));
+    }
 }

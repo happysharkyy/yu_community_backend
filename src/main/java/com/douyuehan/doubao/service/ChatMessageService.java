@@ -1,6 +1,8 @@
 package com.douyuehan.doubao.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.douyuehan.doubao.common.api.PageRequest;
+import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.model.dto.ChatMessageDTO;
 import com.douyuehan.doubao.model.entity.ChatMessage;
 import com.douyuehan.doubao.model.vo.MsgVO;
@@ -33,4 +35,6 @@ public interface ChatMessageService {
     int findUnreadCountAll(String userId);
 
     List<ChatMessageDTO> getMessageAll();
+
+    PageResult findPage(PageRequest pageRequest);
 }

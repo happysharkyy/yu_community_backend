@@ -1,6 +1,7 @@
 package com.douyuehan.doubao.controller;
 
 import com.douyuehan.doubao.common.api.ApiResult;
+import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.dto.SysForwardDTO;
 import com.douyuehan.doubao.model.entity.SysForward;
 import com.douyuehan.doubao.service.SysForwardService;
@@ -29,4 +30,5 @@ public class SysForwardController extends BaseController {
     public ApiResult getTodayAddForward() {
         return ApiResult.success(sysForwardService.getTodayAddForward());
     }
+
 }
