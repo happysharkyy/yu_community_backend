@@ -35,6 +35,11 @@ public class BmsFollow implements Serializable {
     private String fromUserName;
     @TableField(exist = false)
     private String toUserName;
+    @TableField(exist = false)
+    private SysUser fromUser;
+    @TableField(exist = false)
+    private SysUser toUser;
+
     public BmsFollow() {
     }
 

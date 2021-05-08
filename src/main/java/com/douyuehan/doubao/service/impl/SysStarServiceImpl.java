@@ -7,10 +7,9 @@ import com.douyuehan.doubao.mapper.SysStarMapper;
 import com.douyuehan.doubao.model.dto.SysStarDTO;
 import com.douyuehan.doubao.model.entity.Behavior;
 import com.douyuehan.doubao.model.entity.BmsComment;
+import com.douyuehan.doubao.model.entity.SysNotice;
 import com.douyuehan.doubao.model.entity.SysStar;
-import com.douyuehan.doubao.service.IBehaviorService;
-import com.douyuehan.doubao.service.IBehaviorUserLogService;
-import com.douyuehan.doubao.service.SysStarService;
+import com.douyuehan.doubao.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,10 @@ public class SysStarServiceImpl  extends ServiceImpl<SysStarMapper, SysStar> imp
     IBehaviorUserLogService iBehaviorUserLogService;
     @Autowired
     SysStarMapper sysStarMapper;
+    @Autowired
+    SysNoticeService sysNoticeService;
+    @Autowired
+    IBmsPostService iBmsPostService;
     @Override
     public List<SysStar> select(String objId, String Type) {
         LambdaQueryWrapper<SysStar> wrapper = new LambdaQueryWrapper<>();
@@ -55,6 +58,16 @@ public class SysStarServiceImpl  extends ServiceImpl<SysStarMapper, SysStar> imp
         }else {
             sysStarMapper.update(sysStar,wrapper);
         }
+        SysNotice sysNotice = new SysNotice();
+        sysNotice.setId(0);
+        sysNotice.setOperation("点赞");
+        sysNotice.setCreateTime(new Date());
+        sysNotice.setObjId(dto.getObjId());
+        sysNotice.setObjType("帖子");
+        sysNotice.setFromId(dto.getUserId());
+        sysNotice.setToId(iBmsPostService.getById(dto.getObjId()).getUserId());
+        sysNoticeService.insert(sysNotice);
+
         if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(dto.getUserId(),dto.getObjId()))) {
             //用户点赞帖子 更新权重
             if (dto.getStarStatus() == 0) {

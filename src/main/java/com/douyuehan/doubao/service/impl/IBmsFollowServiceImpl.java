@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 public class IBmsFollowServiceImpl extends ServiceImpl<BmsFollowMapper, BmsFollow> implements IBmsFollowService {
     @Autowired
     IUmsUserService iUmsUserService;
+
     @Override
     public PageResult findPage(PageRequest pageRequest) {
         ColumnFilter columnFilter = pageRequest.getColumnFilters().get("toId");
@@ -36,8 +37,10 @@ public class IBmsFollowServiceImpl extends ServiceImpl<BmsFollowMapper, BmsFollo
         for (BmsFollow b:
              result.getRecords()) {
             SysUser sysUser = iUmsUserService.getById(b.getParentId());
+            b.setFromUser(sysUser);
             b.setFromUserName(sysUser.getUsername());
             SysUser sysUser1 = iUmsUserService.getById(b.getFollowerId());
+            b.setToUser(sysUser1);
             b.setToUserName(sysUser1.getUsername());
         }
         PageResult pageResult = new PageResult(result);

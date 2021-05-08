@@ -49,7 +49,14 @@ spring:
           max-interval: 10000s
           # 上一次等待时间 * multiplier = 下一次重试的时间. (0 < 下次重试时间 <= max-interval)
           multiplier: 1.0
-
+  boot:
+    admin:
+      client:
+        url: http://localhost:8084
+        username: admin
+        password: 123456
+  application:
+    name: yufang-admin
 redis:
   host: localhost
   password:

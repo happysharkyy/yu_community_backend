@@ -6,10 +6,9 @@ import com.douyuehan.doubao.mapper.SysForwardMapper;
 import com.douyuehan.doubao.model.dto.SysForwardDTO;
 import com.douyuehan.doubao.model.entity.Behavior;
 import com.douyuehan.doubao.model.entity.SysForward;
+import com.douyuehan.doubao.model.entity.SysNotice;
 import com.douyuehan.doubao.model.entity.SysStar;
-import com.douyuehan.doubao.service.IBehaviorService;
-import com.douyuehan.doubao.service.IBehaviorUserLogService;
-import com.douyuehan.doubao.service.SysForwardService;
+import com.douyuehan.doubao.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,10 @@ public class SysForwardServiceImpl extends ServiceImpl<SysForwardMapper, SysForw
     IBehaviorUserLogService iBehaviorUserLogService;
     @Autowired
     SysForwardMapper sysForwardMapper;
+    @Autowired
+    SysNoticeService sysNoticeService;
+    @Autowired
+    IBmsPostService iBmsPostService;
     @Override
     public List<SysForward> select(String objId, String Type) {
         LambdaQueryWrapper<SysForward> wrapper = new LambdaQueryWrapper<>();
@@ -45,6 +48,17 @@ public class SysForwardServiceImpl extends ServiceImpl<SysForwardMapper, SysForw
         sysForward.setModifyTime(new Date());
         sysForward.setCreateTime(new Date());
         sysForward.setId(0);
+
+        SysNotice sysNotice = new SysNotice();
+        sysNotice.setId(0);
+        sysNotice.setOperation("转发");
+        sysNotice.setCreateTime(new Date());
+        sysNotice.setObjId(dto.getObjId());
+        sysNotice.setContent(dto.getContent());
+        sysNotice.setObjType("帖子");
+        sysNotice.setFromId(dto.getUserId());
+        sysNotice.setToId(iBmsPostService.getById(dto.getObjId()).getUserId());
+        sysNoticeService.insert(sysNotice);
         //用户转发帖子 更新权重
         Behavior behavior = new Behavior(dto.getUserId(),dto.getObjId(),new Date(),
                 iBehaviorUserLogService.getWeightByType("forward")+iBehaviorService.getByBehaviorType(dto.getUserId(),dto.getObjId())

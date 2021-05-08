@@ -10,14 +10,9 @@ import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.BmsCommentMapper;
 import com.douyuehan.doubao.model.dto.CommentDTO;
-import com.douyuehan.doubao.model.entity.Behavior;
-import com.douyuehan.doubao.model.entity.BmsComment;
-import com.douyuehan.doubao.model.entity.BmsPost;
-import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.model.entity.*;
 import com.douyuehan.doubao.model.vo.CommentVO;
-import com.douyuehan.doubao.service.IBehaviorService;
-import com.douyuehan.doubao.service.IBehaviorUserLogService;
-import com.douyuehan.doubao.service.IBmsCommentService;
+import com.douyuehan.doubao.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +31,10 @@ public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsCom
     IBehaviorService iBehaviorService;
     @Autowired
     IBehaviorUserLogService iBehaviorUserLogService;
+    @Autowired
+    SysNoticeService sysNoticeService;
+    @Autowired
+    IBmsPostService iBmsPostService;
     @Override
     public List<CommentVO> getCommentsByTopicID(String topicid) {
         List<CommentVO> lstBmsComment = new ArrayList<CommentVO>();
@@ -56,6 +55,16 @@ public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsCom
                 .topicId(dto.getTopic_id())
                 .createTime(new Date())
                 .build();
+        SysNotice sysNotice = new SysNotice();
+        sysNotice.setId(0);
+        sysNotice.setOperation("评论");
+        sysNotice.setCreateTime(new Date());
+        sysNotice.setObjId(dto.getTopic_id());
+        sysNotice.setObjType("帖子");
+        sysNotice.setContent(dto.getContent());
+        sysNotice.setFromId(user.getId());
+        sysNotice.setToId(iBmsPostService.getById(dto.getTopic_id()).getUserId());
+        sysNoticeService.insert(sysNotice);
         //用户查看帖子 更新权重
         if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id()))) {
             Behavior behavior = new Behavior(user.getId(), dto.getTopic_id(), new Date(),
