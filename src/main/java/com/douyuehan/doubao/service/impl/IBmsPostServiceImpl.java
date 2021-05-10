@@ -2,6 +2,8 @@ package com.douyuehan.doubao.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -11,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.douyuehan.doubao.common.api.ColumnFilter;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
+import com.douyuehan.doubao.mapper.BmsFollowMapper;
 import com.douyuehan.doubao.mapper.BmsTagMapper;
 import com.douyuehan.doubao.mapper.BmsTopicMapper;
 import com.douyuehan.doubao.mapper.SysUserMapper;
@@ -20,13 +23,31 @@ import com.douyuehan.doubao.model.dto.RankViewDTO;
 import com.douyuehan.doubao.model.dto.ResultDTO;
 import com.douyuehan.doubao.model.entity.*;
 import com.douyuehan.doubao.model.vo.BmsPostVO;
+import com.douyuehan.doubao.model.vo.BmsPostVO01;
 import com.douyuehan.doubao.model.vo.PostVO;
 import com.douyuehan.doubao.model.vo.ProfileVO;
 import com.douyuehan.doubao.service.*;
 import com.douyuehan.doubao.utils.SysSensitiveFilterUtil;
 import com.vdurmont.emoji.EmojiParser;
 import io.micrometer.core.instrument.Tags;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.beans.BeanMap;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +56,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -68,8 +90,14 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
 
     @Resource
     private IBmsFollowService bmsFollowService;
+    @Resource
+    private BmsFollowMapper bmsFollowMapper;
     @Autowired
     private IBmsTopicTagService iBmsTopicTagService;
+
+    @Resource
+    private RestHighLevelClient client;;
+
     @Override
     public Page<PostVO> getList(Page<PostVO> page, String tab) {
         // 查询话题
@@ -83,12 +111,15 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         SysUser sysUser = iUmsUserService.getUserByUsername(principal.getName());
         LambdaQueryWrapper<BmsFollow> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BmsFollow::getFollowerId,sysUser.getId());
-        List<BmsFollow> list = bmsFollowService.list(queryWrapper);
+        List<BmsFollow> list = bmsFollowMapper.selectList(queryWrapper);
         List<PostVO> result = new ArrayList<>();
+        if(list.size()==0){
+            return result;
+        }
         for (BmsFollow b:
                 list) {
             LambdaQueryWrapper<BmsPost> queryWrapper1 = new LambdaQueryWrapper<>();
-            queryWrapper1.eq(BmsPost::getUserId,b.getFollowerId());
+            queryWrapper1.eq(BmsPost::getUserId,b.getParentId());
             List<BmsPost> temp = this.baseMapper.selectList(queryWrapper1);
             for (BmsPost b1:
                     temp) {
@@ -110,7 +141,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
                 result.add(postVO);
             }
         }
-//        SimpleDateFormat sdft = new SimpleDateFormat("yyyy-MM-DD HH-MM-ss");
+//        SimpleDateFormat sdft .00000000= new SimpleDateFormat("yyyy-MM-DD HH-MM-ss");
         Collections.sort(result, new Comparator<PostVO>() {
             @Override
             public int compare(PostVO o1, PostVO o2) {
@@ -123,7 +154,7 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
     }
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BmsPost create(CreateTopicDTO dto, SysUser user) {
+    public BmsPost create(CreateTopicDTO dto, SysUser user) throws IOException {
         // 封装
         BmsPost topic = BmsPost.builder()
                 .userId(user.getId())
@@ -139,16 +170,55 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         int newScore = user.getScore() + 1;
         umsUserMapper.updateById(user.setScore(newScore));
 
-
+        BmsPostVO01 bmsPostVO01 = new BmsPostVO01(); //保存到es
+        BeanUtil.copyProperties(topic,bmsPostVO01);
         // 标签
         if (!ObjectUtils.isEmpty(dto.getTags())) {
+            String tagList = "";
             // 保存标签
             List<BmsTag> tags = iBmsTagService.insertTags(dto.getTags());
+            for (BmsTag bmsTopicTag:
+                    tags) {
+                tagList += bmsTopicTag.getName()+"---";
+            }
+            bmsPostVO01.setTagList(tagList);
             // 处理标签与话题的关联
             IBmsTopicTagService.createTopicTag(topic.getId(), tags);
         }
 
+        BulkRequest bulkRequest = new BulkRequest();
+
+        // 保存到那个索引
+        IndexRequest indexRequest = new IndexRequest("result_list");
+        // 设置唯一id字段
+        indexRequest.id(bmsPostVO01.getId().toString());
+        // 转成json字符串
+        String s = JSON.toJSONString(bmsPostVO01);
+        indexRequest.source(s, XContentType.JSON);
+        bulkRequest.add(indexRequest);
+        BulkResponse bulk = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+        // TODO 处理失败信息
+        if( bulk.hasFailures()) {
+            List<String> collect = Arrays.stream(bulk.getItems())
+                    .map(v -> v.getId())
+                    .collect(Collectors.toList());
+
+            System.out.println("错误信息id{}"+collect);
+        }
+
         return topic;
+    }
+    public static <T> Map<String, Object> beanToMap(T bean) {
+        Map<String, Object> map = new HashMap<>();
+        if (bean != null) {
+            BeanMap beanMap = BeanMap.create(bean);
+            for (Object key : beanMap.keySet()) {
+                if(beanMap.get(key) != null)
+                    map.put(key + "", beanMap.get(key));
+            }
+        }
+        return map;
     }
 
     @Override
@@ -198,15 +268,56 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
         return this.baseMapper.selectRecommend(id);
     }
     @Override
-    public Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page) {
-        // 查询话题
-        Page<PostVO> iPage = this.baseMapper.searchByKey(page, keyword);
+    public Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page) throws Exception {
+
+
+        SearchRequest searchRequest = new SearchRequest("result_list");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        QueryBuilder matchPhraseQueryBuilder = QueryBuilders.matchPhraseQuery("title", keyword);
+        QueryBuilder matchPhraseQueryBuilder1 = QueryBuilders.matchPhraseQuery("tagList", keyword);
+        QueryBuilder matchPhraseQueryBuilder2 = QueryBuilders.matchPhraseQuery("username", keyword);
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+                .should(matchPhraseQueryBuilder)
+                .should(matchPhraseQueryBuilder1)
+                .should(matchPhraseQueryBuilder2));
+        searchRequest.source(searchSourceBuilder);
+
+
+        SearchResponse search = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHit[] hits = search.getHits().getHits();
+        Set<BmsPostVO01> playerList = new HashSet<>();
+        for(SearchHit hit: hits){
+            BmsPostVO01 player = JSONObject.parseObject(hit.getSourceAsString(),BmsPostVO01.class);
+            playerList.add(player);
+            System.out.println("===========>"+player);
+        }
         // 查询话题的标签
-        setTopicTags(iPage);
-        List<PostVO> list = iPage.getRecords();int i=0;
+        List<PostVO> list = setTopicTagsPlay(playerList,keyword);
+        Page<PostVO> iPage = new Page<>();
+//
+        iPage.setSize(page.getSize());
+        iPage.setCurrent(page.getCurrent());
+        iPage.setTotal(list.size());
+
+        List<PostVO> list1 = new ArrayList<>();
+        if(list.size() <page.getSize()) {//分页
+            list1 = list;
+        }else{
+            for (int i = (int) ((page.getCurrent()-1)*page.getSize());
+                 i < (int) (page.getCurrent()*page.getSize()); i++) {
+                if(page.getCurrent()*page.getSize()>list.size()){
+                    break;
+                }
+                list1.add(list.get(i));
+            }
+        }
+        iPage.setRecords(list1);
+
+
+        int i=0;
         String nowId = iUmsUserService.getUserByUsername(principal.getName()).getId();
-        for (PostVO postVO:
-        list) {
+        for (BmsPostVO01 postVO: //行为分析
+                playerList) {
             i++;
 
             if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(nowId,postVO.getId()))) {
@@ -250,11 +361,53 @@ public class IBmsPostServiceImpl extends ServiceImpl<BmsTopicMapper, BmsPost> im
                 List<String> tagIds = topicTags.stream().map(BmsTopicTag::getTagId).collect(Collectors.toList());
                 List<BmsTag> tags = bmsTagMapper.selectBatchIds(tagIds);
                 topic.setTags(tags);
-
-
             }
         });
     }
+    private List<PostVO> setTopicTagsPlay(Set<BmsPostVO01> list,String key) {
+        List<PostVO> list1 = new ArrayList<>();
+        list.forEach(topic -> {
+            PostVO postVO = new PostVO();
+            List<BmsTopicTag> topicTags = IBmsTopicTagService.selectByTopicId(topic.getId());
+
+            if (!topicTags.isEmpty()) {
+                List<String> tagIds = topicTags.stream().map(BmsTopicTag::getTagId).collect(Collectors.toList());
+                List<BmsTag> tags = bmsTagMapper.selectBatchIds(tagIds);
+                BeanUtil.copyProperties(topic,postVO);
+                SysUser sysUser = iUmsUserService.getById(topic.getUserId());
+                postVO.setAlias(sysUser.getAlias());
+                postVO.setAvatar(sysUser.getAvatar());
+                postVO.setUsername(sysUser.getUsername());
+                postVO.setTags(tags);
+                if(postVO.getTitle().indexOf(key)!=-1){
+                    postVO.setTitle(ReplacementInfo(new StringBuilder(postVO.getTitle()),key,"<span style='color:red'>","<span>"));
+                }
+                if(postVO.getUsername().indexOf(key)!=-1){
+                    postVO.setUsername(ReplacementInfo(new StringBuilder(postVO.getUsername()),key,"<span style='color:red'>","<span>"));
+                }
+                for (BmsTag b:
+                     tags) {
+                    if(b.getName().indexOf(key)!=-1){
+                        b.setName(ReplacementInfo(new StringBuilder(b.getName()),key,"<span style='color:red'>","<span>"));
+                    }
+                }
+                list1.add(postVO);
+            }
+        });
+        return list1;
+    }
+    public String ReplacementInfo(StringBuilder stringBuilder, String keyword, String before, String rear) {
+        //字符第一次出现的位置
+        int index = stringBuilder.indexOf(keyword);
+        while (index != -1) {
+            stringBuilder.insert(index, before);
+            stringBuilder.insert(index + before.length() + keyword.length(), rear);
+            //下一次出现的位置，
+            index = stringBuilder.indexOf(keyword, index + before.length() + keyword.length() + rear.length() - 1);
+        }
+        return stringBuilder.toString();
+    }
+
     public String getColumnFilterValue(PageRequest pageRequest, String filterName) {
         String value = null;
         ColumnFilter columnFilter = pageRequest.getColumnFilters().get(filterName);

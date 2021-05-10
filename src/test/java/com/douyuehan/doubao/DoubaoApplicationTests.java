@@ -1,20 +1,48 @@
 package com.douyuehan.doubao;
 
-import com.douyuehan.doubao.model.entity.Behavior;
-import com.douyuehan.doubao.model.entity.BehaviorSimilarity;
-import com.douyuehan.doubao.service.IBehaviorService;
-import com.douyuehan.doubao.service.IBehaviorSimilarityService;
-import com.douyuehan.doubao.service.IBmsPostService;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.douyuehan.doubao.mapper.BmsTopicMapper;
+import com.douyuehan.doubao.model.entity.*;
+import com.douyuehan.doubao.model.vo.BmsPostVO01;
+import com.douyuehan.doubao.model.vo.PostVO;
+import com.douyuehan.doubao.service.*;
 import com.douyuehan.doubao.utils.test.RecommendUtils;
+
+
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.List;
+import javax.annotation.Resource;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -24,10 +52,130 @@ public class DoubaoApplicationTests {
     IBehaviorService iBehaviorService;
 
     @Autowired
+    IBmsPostService iBmsPostService;
+
+    @Autowired
+    BmsTopicMapper bmsTopicMapper;
+
+
+    @Autowired
     IBehaviorSimilarityService userSimilarityService;
 
     @Autowired
     IBmsPostService productService;
+
+    @Autowired
+    IUmsUserService iUmsUserService;
+
+    @Autowired
+    IBmsTopicTagService iBmsTopicTagService;
+
+    @Autowired
+    IBmsTagService iBmsTagService;
+
+    @Resource
+    private RestHighLevelClient client;;
+
+    @org.junit.Test
+    public void insert() throws IOException {
+        LambdaQueryWrapper<BmsPost> queryWrapper = new LambdaQueryWrapper<>();
+        List<BmsPost> list = bmsTopicMapper.selectList(queryWrapper);
+        List<BmsPostVO01> result = new ArrayList<>();
+
+
+        for (BmsPost b1:
+                list) {
+            BmsPostVO01 bmsPostVO01 = new BmsPostVO01();
+            String tagList = "";
+            List<BmsTopicTag> topicTagList =  iBmsTopicTagService.selectByTopicId(b1.getId());
+            for (BmsTopicTag bmsTopicTag:
+                    topicTagList) {
+                tagList += iBmsTagService.getById(bmsTopicTag.getTagId()).getName()+"---";
+            }
+            BeanUtils.copyProperties(b1,bmsPostVO01);
+            bmsPostVO01.setUsername(iUmsUserService.getById(b1.getUserId()).getUsername());
+            bmsPostVO01.setTagList(tagList);
+            result.add(bmsPostVO01);
+
+        }
+
+
+//保存到es
+        // 1.在es中建立索引，product,建立好映射关系
+
+        // 2、给es中保存这些数据
+        BulkRequest bulkRequest = new BulkRequest();
+        result.forEach(v -> {
+            // 保存到那个索引
+            IndexRequest indexRequest = new IndexRequest("result_list");
+            // 设置唯一id字段
+            indexRequest.id(v.getId().toString());
+            // 转成json字符串
+            String s = JSON.toJSONString(v);
+            indexRequest.source(s, XContentType.JSON);
+            bulkRequest.add(indexRequest);
+        });
+        BulkResponse bulk = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+        // TODO 处理失败信息
+        if( bulk.hasFailures()) {
+            List<String> collect = Arrays.stream(bulk.getItems())
+                    .map(v -> v.getId())
+                    .collect(Collectors.toList());
+
+            System.out.println("错误信息id{}"+collect);
+        }
+
+
+    }
+    @org.junit.Test
+    // 2.获取这些数据实现搜索功能
+    public void searchPage() throws Exception {
+        SearchRequest searchRequest = new SearchRequest();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        QueryBuilder matchPhraseQueryBuilder = QueryBuilders.matchPhraseQuery("title", "中暑");
+        QueryBuilder matchPhraseQueryBuilder1 = QueryBuilders.matchPhraseQuery("tagList", "mysql");
+        searchSourceBuilder.query(QueryBuilders.boolQuery()
+                .should(matchPhraseQueryBuilder)
+                .should(matchPhraseQueryBuilder1));
+        searchRequest.source(searchSourceBuilder);
+
+        // 高亮
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("title");
+        // 关闭多个高亮
+        highlightBuilder.requireFieldMatch(false);
+        highlightBuilder.preTags("<span style='color:red'>");
+        highlightBuilder.postTags("</span>");
+
+        searchSourceBuilder.highlighter(highlightBuilder);
+
+        SearchResponse search = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHit[] hits = search.getHits().getHits();
+        List<BmsPostVO01> playerList = new LinkedList<>();
+        for(SearchHit hit: hits){
+            BmsPostVO01 player = JSONObject.parseObject(hit.getSourceAsString(),BmsPostVO01.class);
+
+            //解析高亮字段
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            HighlightField title = highlightFields.get("title");
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            if(title != null){
+                Text[] fragments = title.fragments();
+                String n_title = "";
+                for (Text text : fragments) {
+                    n_title += text;
+                }
+                // 高亮字段替换掉原来的内容即可
+                sourceAsMap.put("title",n_title);
+                System.out.println("-------------"+sourceAsMap);
+            }
+
+            playerList.add(player);
+            System.out.println("===========>"+player);
+        }
+
+    }
     /**
      * 测试列出所有用户的购买行为的方法
      */

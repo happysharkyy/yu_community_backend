@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.security.Principal;
+
 
 @Service
 public class IBmsFollowServiceImpl extends ServiceImpl<BmsFollowMapper, BmsFollow> implements IBmsFollowService {
@@ -36,6 +38,32 @@ public class IBmsFollowServiceImpl extends ServiceImpl<BmsFollowMapper, BmsFollo
         IPage<BmsFollow> result = this.baseMapper.selectPage(page, wrapper);
         for (BmsFollow b:
              result.getRecords()) {
+            SysUser sysUser = iUmsUserService.getById(b.getParentId());
+            b.setFromUser(sysUser);
+            b.setFromUserName(sysUser.getUsername());
+            SysUser sysUser1 = iUmsUserService.getById(b.getFollowerId());
+            b.setToUser(sysUser1);
+            b.setToUserName(sysUser1.getUsername());
+        }
+        PageResult pageResult = new PageResult(result);
+        return pageResult;
+    }
+
+    @Override
+    public PageResult findPageOwn(Principal principal ,PageRequest pageRequest) {
+        ColumnFilter columnFilter = pageRequest.getColumnFilters().get("toId");
+        LambdaQueryWrapper<BmsFollow> wrapper = new LambdaQueryWrapper<>();
+        if (columnFilter != null && !StringUtils.isEmpty(columnFilter.getValue())) {
+            wrapper.eq(BmsFollow::getFollowerId, columnFilter.getValue());
+        }
+        SysUser sysUser2 = iUmsUserService.getUserByUsername(principal.getName());
+        int pageNum = pageRequest.getPageNum();
+        int pageSize = pageRequest.getPageSize();
+        wrapper.eq(BmsFollow::getFollowerId,sysUser2.getId());
+        Page<BmsFollow> page = new Page<>(pageNum, pageSize);
+        IPage<BmsFollow> result = this.baseMapper.selectPage(page, wrapper);
+        for (BmsFollow b:
+                result.getRecords()) {
             SysUser sysUser = iUmsUserService.getById(b.getParentId());
             b.setFromUser(sysUser);
             b.setFromUserName(sysUser.getUsername());

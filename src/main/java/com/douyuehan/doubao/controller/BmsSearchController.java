@@ -22,7 +22,7 @@ public class BmsSearchController extends BaseController {
     @GetMapping
     public ApiResult<Page<PostVO>> searchList(Principal principal, @RequestParam("keyword") String keyword,
                                               @RequestParam("pageNum") Integer pageNum,
-                                              @RequestParam("pageSize") Integer pageSize) {
+                                              @RequestParam("pageSize") Integer pageSize) throws Exception {
         Page<PostVO> results = postService.searchByKey(principal,keyword, new Page<>(pageNum, pageSize));
         return ApiResult.success(results);
     }

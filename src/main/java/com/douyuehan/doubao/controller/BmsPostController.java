@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
@@ -43,13 +44,12 @@ public class BmsPostController extends BaseController {
     }
     @GetMapping("/list/follow")
     public ApiResult<List<PostVO>> follow(Principal principal) {
-        System.out.println(principal.toString()+"11111111111");
         List<PostVO> list= iBmsPostService.getListFllow(principal);;
         return ApiResult.success(list);
     }
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ApiResult<BmsPost> create(Principal principal
-            , @RequestBody CreateTopicDTO dto) {
+            , @RequestBody CreateTopicDTO dto) throws IOException {
         SysUser user = umsUserService.getUserByUsername(principal.getName());
         BmsPost topic = iBmsPostService.create(dto, user);
         return ApiResult.success(topic);

@@ -4,6 +4,9 @@ spring:
   servlet:
     multipart:
       enabled: true
+elasticsearch:
+  host: 127.0.0.1
+  port: 9200
 jwt:
   # Bearer Token
   tokenHead: 'Bearer '

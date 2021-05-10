@@ -13,6 +13,7 @@ import com.douyuehan.doubao.model.entity.SysUser;
 import com.douyuehan.doubao.model.vo.BmsPostVO;
 import com.douyuehan.doubao.model.vo.PostVO;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 
@@ -34,7 +35,7 @@ public interface IBmsPostService extends IService<BmsPost> {
      * @param principal
      * @return
      */
-    BmsPost create(CreateTopicDTO dto, SysUser principal);
+    BmsPost create(CreateTopicDTO dto, SysUser principal) throws IOException;
 
     /**
      * 查看话题详情
@@ -57,7 +58,7 @@ public interface IBmsPostService extends IService<BmsPost> {
      * @param page
      * @return
      */
-    Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page);
+    Page<PostVO> searchByKey(Principal principal,String keyword, Page<PostVO> page) throws Exception;
 
     PageResult findPage(PageRequest pageRequest);
 

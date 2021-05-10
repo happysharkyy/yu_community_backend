@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.Date;
 @TableName("bms_post")
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class BmsPost implements Serializable {
 
     private static final long serialVersionUID = 1L;
