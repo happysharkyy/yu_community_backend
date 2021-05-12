@@ -61,7 +61,7 @@ public class ActivityUserController  implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() {
-        List <Activity> goodsVos = goodsService.listGoodsVo();
+        List <Activity> goodsVos = goodsService.listGoods();
         if (null != goodsVos) {
             goodsVos.parallelStream().forEach(goodsVo -> {
                 redisService.set(GoodsKey.getMiaoshaGoodsStock, ""+goodsVo.getId(), goodsVo.getStock());
@@ -70,7 +70,11 @@ public class ActivityUserController  implements InitializingBean {
             });
         }
     }
-
+    @GetMapping("/unsign")
+    public  ApiResult unsign(Principal principal,@RequestParam(value = "activityId", defaultValue = "1") String activityId){
+        return ApiResult.success(orderService.unsign(iUmsUserService.getUserByUsername(principal.getName()).getId()
+        ,activityId));
+    }
     @AccessLimit(seconds = 5, maxCount = 5)
     @GetMapping("/do_miaosha/{goodsId}")
     public  ApiResult miaosha(Principal principal,@PathVariable int goodsId) {

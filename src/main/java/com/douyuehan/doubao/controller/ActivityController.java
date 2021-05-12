@@ -5,6 +5,7 @@ import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.vo.BmsPostVO;
 import com.douyuehan.doubao.service.ActivityService;
+import com.douyuehan.doubao.service.IUmsUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +17,11 @@ import java.util.List;
 public class ActivityController {
     @Autowired
     private ActivityService activityService;
+    @Autowired
+    private IUmsUserService iUmsUserService;
     @GetMapping("/getList")
-    public ApiResult<List<Activity>> getList() {
-        return ApiResult.success(activityService.listGoodsVo());
+    public ApiResult<List<Activity>> getList(Principal principal) {
+        return ApiResult.success(activityService.listGoodsVo(iUmsUserService.getUserByUsername(principal.getName()).getId()));
     }
     @GetMapping("/getActivityById/{id}")
     public ApiResult<Activity> getActivityById(@PathVariable int id) {
@@ -27,5 +30,9 @@ public class ActivityController {
     @PostMapping("/findPage")
     public ApiResult findPage(@RequestBody PageRequest pageRequest) {
         return ApiResult.success(activityService.findPage(pageRequest));
+    }
+    @GetMapping("/getListByUser")
+    public ApiResult<List<Activity>> getListByUser(Principal principal) {
+        return ApiResult.success(activityService.getListByUser(iUmsUserService.getUserByUsername(principal.getName()).getId()));
     }
 }

@@ -73,7 +73,7 @@ public class IBehaviorServiceImpl extends ServiceImpl<IBehaviorMapper, Behavior>
             if(sysUser.getId().equals(behavior.getUserId())){
                 iBehaviorMapper.insert(behavior);
             }else{
-                Behavior behavior1 = new Behavior(sysUser.getId(),behavior.getPostId(),new Date(),0, (long) 0);
+                Behavior behavior1 = new Behavior(sysUser.getId(),behavior.getPostId(),new Date(),1, (long) 1);
                 iBehaviorMapper.insert(behavior1);
             }
         }

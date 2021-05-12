@@ -30,8 +30,8 @@ public class RecommendUtils {
     }
     
     /**
-     * 将用户的购买行为组装成一个map,key为userId，value也是一个map，这个map记录的是二级类目以及它对应的点击量
-     * @param userActiveList 用户的购买行为列表
+     * 将用户的操作行为组装成一个map,key为userId，value也是一个map，这个map记录的是帖子以及它对应的点击量
+     * @param userActiveList 用户的操作行为列表
      * @return 组装好的用户的购买行为的map集合
      */
     public static ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> assembleUserBehavior(List<Behavior> userActiveList) {
@@ -40,9 +40,9 @@ public class RecommendUtils {
         for (Behavior userActive : userActiveList) {
             // 1.获取用户id
             String userId = userActive.getUserId();
-            // 2.获取二级类目id
+            // 2.获取帖子id
             String postId = userActive.getPostId();
-            // 3.获取该二级类目的点击量
+            // 3.获取帖子的点击量
             Double hits = userActive.getCount()*userActive.getBehaviorType();
             
             // 判断activeMap中是否已经存在了该userId的信息，如果存在则进行更新
@@ -63,7 +63,7 @@ public class RecommendUtils {
     
     /**
      * 计算用户与用户之间的相似性，返回计算出的用户与用户之间的相似度对象
-     * @param activeMap 用户对各个二级类目的购买行为的一个map集合
+     * @param activeMap 用户对各个帖子的操作行为的一个map集合
      * @return 计算出的用户与用户之间的相似度的对象存储形式
      */
     public static List<BehaviorSimilarity>  calcSimilarityBetweenUsers(ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> activeMap) {
@@ -76,7 +76,7 @@ public class RecommendUtils {
         // 把这些集合放入ArrayList中
         List<String> userIdList = new ArrayList<>(userSet);
         
-        // 小于两个说明当前map集合中只有一个map集合的购买行为，或者一个都没有，直接返回
+        // 小于两个说明当前map集合中只有一个map集合的操作行为，或者一个都没有，直接返回
         if (userIdList.size() < 2) {
             return similarityList;
         }
@@ -84,11 +84,11 @@ public class RecommendUtils {
         // 计算所有的用户之间的相似度对
         for (int i = 0; i < userIdList.size() - 1; i++) {
             for (int j = i + 1; j < userIdList.size(); j++) {
-                // 分别获取两个用户对每个二级类目的点击量
+                // 分别获取两个用户对每个帖子的点击量
                 ConcurrentHashMap<String, Double> userCategory2Map = activeMap.get(userIdList.get(i));
                 ConcurrentHashMap<String, Double> userRefCategory2Map = activeMap.get(userIdList.get(j));
 
-                // 获取两个map中二级类目id的集合
+                // 获取两个map中帖子id的集合
                 Set<String> key1Set = userCategory2Map.keySet();
                 Set<String> key2Set = userRefCategory2Map.keySet();
                 Iterator<String> it1 = key1Set.iterator();
@@ -107,7 +107,7 @@ public class RecommendUtils {
                 while (it1.hasNext() && it2.hasNext()) {
                     String it1Id = it1.next();
                     String it2Id = it2.next();
-                    // 获取二级类目对应的点击次数
+                    // 获取帖子对应的点击次数
                     Double hits1 = userCategory2Map.get(it1Id);
                     Double hits2 = userRefCategory2Map.get(it2Id);
                     // 累加分子
@@ -178,11 +178,11 @@ public class RecommendUtils {
     }
 
     /**
-     * 到similarUserList中的用户访问的二级类目中查找userId不经常点击的二级类目中获得被推荐的类目id
-     * @param userId 被推荐商品的用户id
+     * 到similarUserList中的用户访问的帖子中查找userId不经常点击的帖子中获得被推荐的帖子id
+     * @param userId 被推荐帖子的用户id
      * @param similarUserList 用userId相似的用户集合
      * @param userActiveList 所有用户的浏览行为
-     * @return 可以推荐给userId的二级类目id列表
+     * @return 可以推荐给userId的帖子id列表
      */
     public static List<String> getRecommendateCategory2(String userId, List<String> similarUserList, List<Behavior> userActiveList) {
         List<String> recommeddateProductList = new ArrayList<String>();
@@ -190,7 +190,7 @@ public class RecommendUtils {
         // userId的浏览行为列表
         List<Behavior> userIdActiveList = findUsersBrowsBehavior(userId, userActiveList);
         
-        // 对userId的浏览行为按照二级类目id排个序，方便后续与推荐的用户的浏览行为中的二级类目的点击次数直接相减，避免时间复杂度为O(n2)
+        // 对userId的浏览行为按照帖子id排个序，方便后续与推荐的用户的浏览行为中的帖子的点击次数直接相减，避免时间复杂度为O(n2)
         Collections.sort(userIdActiveList, new Comparator<Behavior>(){
             @Override
             public int compare(Behavior o1, Behavior o2) {
@@ -198,9 +198,9 @@ public class RecommendUtils {
             }
         });
 
-        // 1.从与useId浏览行为相似的每个用户中找出一个推荐的二级类目
+        // 1.从与useId浏览行为相似的每个用户中找出一个推荐的帖子
         for (String refId : similarUserList) {
-            // 计算当前用户所点击的二级类目次数与被推荐的用户所点击的二级类目的次数的差值
+            // 计算当前用户所点击的帖子次数与被推荐的用户所点击的帖子的次数的差值
             // 找到当前这个用户的浏览行为
             List<Behavior> currActiveList = findUsersBrowsBehavior(refId, userActiveList);
             
@@ -212,13 +212,13 @@ public class RecommendUtils {
                 }
             });
             
-            // 记录差值最大的二级类目的id
+            // 记录差值最大的帖子的id
             String maxCategory2 = "";
             
             // 记录最大的差值
             double maxDifference = 0.0;
             for (int i = 0; i < currActiveList.size(); i++) {
-                // 求出点击量差值最大的二级类目，即为要推荐的类目
+                // 求出点击量差值最大的帖子，即为要推荐的类目
                 double difference = Math.abs((currActiveList.get(i).getCount()*currActiveList.get(i).getBehaviorType())
                         - (userIdActiveList.get(i).getCount()*userActiveList.get(i).getBehaviorType()));
                 if (difference > maxDifference) {

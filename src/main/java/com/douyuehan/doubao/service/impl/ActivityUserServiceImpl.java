@@ -6,8 +6,10 @@ import com.douyuehan.doubao.mapper.ActivityUserMapper;
 import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.entity.ActivityUser;
 import com.douyuehan.doubao.model.entity.SysUser;
+import com.douyuehan.doubao.redis.GoodsKey;
 import com.douyuehan.doubao.redis.OrderKey;
 import com.douyuehan.doubao.redis.RedisService;
+import com.douyuehan.doubao.service.ActivityService;
 import com.douyuehan.doubao.service.ActivityUserService;
 import com.douyuehan.doubao.service.IUmsUserService;
 import com.douyuehan.doubao.utils.BeanUtil;
@@ -28,6 +30,8 @@ public class ActivityUserServiceImpl extends ServiceImpl<ActivityUserMapper, Act
     private RedisService redisService;
     @Autowired
     IUmsUserService iUmsUserService;
+    @Autowired
+    ActivityService activityService;
     @Override
     public ActivityUser createOrder(SysUser user, Activity goods) {
 
@@ -67,5 +71,21 @@ public class ActivityUserServiceImpl extends ServiceImpl<ActivityUserMapper, Act
             result.add(activityUser);
         }
         return result;
+    }
+
+    @Override
+    public int unsign(String id, String activityId) {
+
+
+        redisService.delete(OrderKey.getMiaoshaOrderByUidGid, ""+id+"_"+activityId);
+        LambdaQueryWrapper<ActivityUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ActivityUser::getUserId,id);
+        queryWrapper.eq(ActivityUser::getActivityId,activityId);
+        //更新库存
+        Activity activity = activityService.getById(activityId);
+        activity.setStock(activity.getStock()+1);
+        redisService.set(GoodsKey.getMiaoshaGoodsStock, ""+activityId, activity.getStock()+1);
+        activityService.updateById(activity);
+        return activityUserMapper.delete(queryWrapper);
     }
 }

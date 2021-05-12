@@ -55,4 +55,20 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         queryWrapper.eq(SysNotice::getIsRead,0);
         return sysNoticeMapper.selectCount(queryWrapper);
     }
+
+    @Override
+    public List<SysNotice> findDomain(SysUser user) {
+        LambdaQueryWrapper<SysNotice> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysNotice::getFromId,user.getId());
+        List<SysNotice> list = sysNoticeMapper.selectList(queryWrapper);
+        for (SysNotice s:
+                list) {
+            s.setFromUser(iUmsUserService.getById(s.getFromId()));
+            s.setToUser(iUmsUserService.getById(s.getToId()));
+            if(!s.getObjId().isEmpty()){
+                s.setBmsPost(iBmsPostService.getById(s.getObjId()));
+            }
+        }
+        return list;
+    }
 }

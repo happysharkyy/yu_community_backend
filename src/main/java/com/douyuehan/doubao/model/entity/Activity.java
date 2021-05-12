@@ -60,4 +60,7 @@ public class Activity implements Serializable{
 
     @TableField(exist = false)
     private List<ActivityUser> list;
+
+    @TableField(exist = false)
+    private String statusDetail = "未报名";
 }

@@ -29,6 +29,12 @@ public class SysNoticeController {
         List<SysNotice> topic = sysNoticeService.findNotice(user);
         return ApiResult.success(topic);
     }
+    @RequestMapping(value = "/findDomain", method = RequestMethod.GET)
+    public ApiResult<List<SysNotice>> findDomain(Principal principal) {
+        SysUser user = iUmsUserService.getUserByUsername(principal.getName());
+        List<SysNotice> topic = sysNoticeService.findDomain(user);
+        return ApiResult.success(topic);
+    }
     @RequestMapping(value = "/Count", method = RequestMethod.GET)
     public ApiResult<Integer> Count(Principal principal) {
         SysUser user = iUmsUserService.getUserByUsername(principal.getName());

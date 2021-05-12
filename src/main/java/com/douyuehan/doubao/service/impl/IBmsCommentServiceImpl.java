@@ -65,7 +65,7 @@ public class IBmsCommentServiceImpl extends ServiceImpl<BmsCommentMapper, BmsCom
         sysNotice.setFromId(user.getId());
         sysNotice.setToId(iBmsPostService.getById(dto.getTopic_id()).getUserId());
         sysNoticeService.insert(sysNotice);
-        //用户查看帖子 更新权重
+        //用户评论帖子 更新权重
         if(!ObjectUtil.isEmpty(iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id()))) {
             Behavior behavior = new Behavior(user.getId(), dto.getTopic_id(), new Date(),
                     iBehaviorUserLogService.getWeightByType("comment") + iBehaviorService.getByBehaviorType(user.getId(), dto.getTopic_id())

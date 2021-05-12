@@ -11,4 +11,5 @@ public interface SysNoticeService  extends IService<SysNotice> {
     List<SysNotice> findNotice(SysUser user);
     void insert(SysNotice sysNotice);
     int count(SysUser sysUser);
+    List<SysNotice> findDomain(SysUser user);
 }

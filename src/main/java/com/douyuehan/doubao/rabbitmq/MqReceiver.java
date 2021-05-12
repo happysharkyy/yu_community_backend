@@ -45,7 +45,6 @@ public class MqReceiver {
         // 判断库存
         Activity goodsVo = activityService.getGoodsVoByGoodsId(goodsId);
         if (null == goodsVo || goodsVo.getStock() <= 0) {
-//            log.error("miaoshaQueueReceiver, 库存不足, u={}, g={}", user.getId(), goodsId);
             return;
         }
 

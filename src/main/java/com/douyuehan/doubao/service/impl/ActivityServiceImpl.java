@@ -8,6 +8,7 @@ import com.douyuehan.doubao.common.api.ColumnFilter;
 import com.douyuehan.doubao.common.api.PageRequest;
 import com.douyuehan.doubao.common.api.PageResult;
 import com.douyuehan.doubao.mapper.ActivityMapper;
+import com.douyuehan.doubao.mapper.ActivityUserMapper;
 import com.douyuehan.doubao.model.entity.Activity;
 import com.douyuehan.doubao.model.entity.ActivityUser;
 import com.douyuehan.doubao.model.entity.BmsPromotion;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ActivityServiceImpl  extends ServiceImpl<ActivityMapper, Activity> implements ActivityService {
@@ -25,9 +27,24 @@ public class ActivityServiceImpl  extends ServiceImpl<ActivityMapper, Activity> 
     ActivityMapper activityMapper;
     @Autowired
     ActivityUserService activityUserService;
+    @Autowired
+    ActivityUserMapper activityUserMapper;
 
-    public List<Activity> listGoodsVo() {
-        return activityMapper.selectList(new LambdaQueryWrapper<>());
+
+    public List<Activity> listGoodsVo(String userId) {
+        List<Activity> list = activityMapper.selectList(new LambdaQueryWrapper<>());
+        for (Activity activity:
+             list) {
+            List<ActivityUser> list1 = activityUserService.getOrderByActivity(activity.getId());
+            for (ActivityUser a:
+                 list1) {
+                if(a.getUserId().equals(userId)){
+                    activity.setStatusDetail("已报名");
+                    break;
+                }
+            }
+        }
+        return list;
     }
 
     public Activity getGoodsVoByGoodsId(Long goodsId) {
@@ -50,6 +67,32 @@ public class ActivityServiceImpl  extends ServiceImpl<ActivityMapper, Activity> 
         IPage<Activity> result = this.baseMapper.selectPage(page, wrapper);
         PageResult pageResult = new PageResult(result);
         return pageResult;
+    }
+
+    @Override
+    public List<Activity> listGoods() {
+        return activityMapper.selectList(new LambdaQueryWrapper<>());
+    }
+
+    @Override
+    public List<Activity> getListByUser(String id) {
+        LambdaQueryWrapper<ActivityUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ActivityUser::getUserId,id);
+        List<ActivityUser> list2 = activityUserMapper.selectList(queryWrapper);
+        List<Long> params = list2.stream().map(ActivityUser::getActivityId).collect(Collectors.toList());
+        List<Activity> list = activityMapper.selectBatchIds(params);
+        for (Activity activity:
+                list) {
+            List<ActivityUser> list1 = activityUserService.getOrderByActivity(activity.getId());
+            for (ActivityUser a:
+                    list1) {
+                if(a.getUserId().equals(id)){
+                    activity.setStatusDetail("已报名");
+                    break;
+                }
+            }
+        }
+        return list;
     }
 
     /**
